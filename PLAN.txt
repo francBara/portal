@@ -1,0 +1,20 @@
+Portal
+
+A non technical can interact with an existing codebase by portals created by developers.
+
+A developer could annotate/comment certain parts of code to indicate certain modifications by non technicals. The developer decides the boundaries and effects of such intervention.
+
+
+Let's start with javascript only for simplicity, annotations are made via comments/javadocs.
+
+
+Code level interactions:
+
+- Change variable assignment values
+- Change conditions
+
+
+User interaction examples:
+
+- Change UI components (color, size, opacity, padding, margins, borders, whatever...)
+- Change application constants (max number of bookings, timeouts, ecc...)

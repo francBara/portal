@@ -1,0 +1,33 @@
+{{define "slider"}}
+<div class="input-field">
+    <label for="{{.Name}}" class="slider-label">{{.Name}}</label>
+    <input type="range" class="slider" id="{{.Name}}" min="{{.Min}}" max="{{.Max}}" value="{{.InitialValue}}"
+        oninput="updateSliderValue('{{.Name}}', this.value)">
+    <div id="{{.Name}}-slider-value" class="slider-value">{{.InitialValue}}</div>
+</div>
+
+<script>
+    function updateSliderValue() {
+        var slider = document.getElementById("{{.Name}}");
+        var sliderValue = document.getElementById("{{.Name}}-slider-value");
+        sliderValue.textContent = slider.value;
+    }
+</script>
+{{end}}
+
+<style>
+    .slider {
+        width: 100%;
+    }
+
+    .slider-label {
+        margin-bottom: 10px;
+        font-size: 1.1em;
+    }
+
+    .slider-value {
+        font-size: 1.2em;
+        font-weight: bold;
+        color: #00e600;
+    }
+</style>
