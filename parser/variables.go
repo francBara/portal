@@ -1,5 +1,10 @@
 package parser
 
+import (
+	"encoding/json"
+	"os"
+)
+
 type NumberVariable struct {
 	Name  string
 	Value int
@@ -23,4 +28,18 @@ func (pv PortalVariables) Concat(newPv PortalVariables) PortalVariables {
 	concatenatedPv.Number = append(pv.Number, newPv.Number...)
 	concatenatedPv.String = append(pv.String, newPv.String...)
 	return concatenatedPv
+}
+
+func (variables PortalVariables) Dump() {
+	file, err := os.Create("variables.json")
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "  ")
+	if err := encoder.Encode(variables); err != nil {
+		panic(err)
+	}
 }

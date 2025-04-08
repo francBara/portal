@@ -1,4 +1,4 @@
-package generator
+package patcher
 
 type Slider struct {
 	Id           string

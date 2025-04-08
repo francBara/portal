@@ -1,0 +1,17 @@
+{
+  "Number": [
+    {
+      "Name": "maxChats",
+      "Value": 24,
+      "Max": 100,
+      "Min": 0,
+      "Step": 1
+    }
+  ],
+  "String": [
+    {
+      "Name": "chatName",
+      "Value": "My Chat"
+    }
+  ]
+}

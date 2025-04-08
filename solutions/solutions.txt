@@ -1,0 +1,54 @@
+Cloud-Hosted Dashboard + GitHub App Integration
+
+    Flow:
+
+        Your app hosts the dashboard.
+
+        Users log in (OAuth) and connect a repo via a GitHub App.
+
+        Changes made through UI create a branch/PR via GitHub API.
+
+    Tech: OAuth + GitHub App + GitHub API.
+
+    Notes: How to make PRs/commits without cloning the code? Is it possible?
+
+
+
+Self-Hosted Dashboard + patcher via Docker or CLI
+
+    Flow:
+
+        Dev runs a CLI or Docker container that spins up the dashboard and handles Git operations.
+
+        Non-tech uses it locally or via VPN.
+
+        Changes commit/push directly.
+
+    Notes: Open source solution
+
+
+
+Pull-Based Git Flow
+
+    Flow:
+
+        Your hosted dashboard just outputs a diff/patch or file.
+
+        Devs pull changes manually (or on cron) via a CLI, apply them locally.
+
+        Can be automated in CI.
+
+    Notes: No instant feedback, total privacy,
+
+
+Pull-Based Git Flow with patcher
+
+    Flow:
+
+        Your hosted dashboard just outputs a diff/patch or file.
+
+        Devs host the patcher.
+
+        Can be automated in CI.
+
+    Notes: Instant feedback, total privacy,

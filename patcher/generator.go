@@ -1,10 +1,10 @@
-package generator
+package patcher
 
 import (
+	"bytes"
 	"html/template"
 	"log"
 	"math/rand"
-	"os"
 	"portal/parser"
 	"strconv"
 )
@@ -19,7 +19,7 @@ type DashboardData struct {
 	PatcherUrl string
 }
 
-func Generate(variables parser.PortalVariables) {
+func GenerateDashboard(variables parser.PortalVariables) string {
 	var components DashboarComponents
 
 	for _, numVar := range variables.Number {
@@ -46,19 +46,16 @@ func Generate(variables parser.PortalVariables) {
 		log.Fatal("Error parsing template:", err)
 	}
 
-	outFile, err := os.Create("out.html")
-	if err != nil {
-		log.Fatal("Error creating output file:", err)
-	}
-	defer outFile.Close()
-
 	data := DashboardData{
 		Components: components,
-		PatcherUrl: "http://localhost:8080",
 	}
 
-	err = tmpl.Execute(outFile, data)
+	var buf bytes.Buffer
+
+	err = tmpl.Execute(&buf, data)
 	if err != nil {
 		log.Fatal("Error executing template:", err)
 	}
+
+	return buf.String()
 }
