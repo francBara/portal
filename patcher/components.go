@@ -1,8 +1,9 @@
 package patcher
 
 type DashboarComponents struct {
-	Sliders    []Slider
-	TextFields []TextField
+	Sliders      []Slider
+	TextFields   []TextField
+	NumberFields []NumberField
 }
 
 type Slider struct {
@@ -17,5 +18,11 @@ type Slider struct {
 type TextField struct {
 	Id           string
 	InitialValue string
+	Name         string
+}
+
+type NumberField struct {
+	Id           string
+	InitialValue int
 	Name         string
 }

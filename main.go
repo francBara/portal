@@ -7,6 +7,7 @@ import (
 	"portal/patcher"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var port int
@@ -37,6 +38,14 @@ func main() {
 	}
 	patcherCmd.Flags().StringVarP(&variablesPath, "variables", "v", "./variables.json", "The path to the variables configuration file")
 	patcherCmd.Flags().IntVarP(&port, "port", "p", 8080, "The port for the webserver")
+
+	patcherCmd.Flags().String("repoOwner", "", "The owner of the Github repo")
+	patcherCmd.Flags().String("repoName", "", "The name of the Github repo")
+	patcherCmd.Flags().String("pac", "", "Your Github account personal access token")
+
+	viper.BindPFlag("repoOwner", patcherCmd.Flags().Lookup("repoOwner"))
+	viper.BindPFlag("repoName", patcherCmd.Flags().Lookup("repoName"))
+	viper.BindPFlag("pac", patcherCmd.Flags().Lookup("pac"))
 
 	rootCmd.AddCommand(patcherCmd)
 

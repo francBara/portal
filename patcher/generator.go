@@ -5,7 +5,6 @@ import (
 	"html/template"
 	"log"
 	"portal/parser"
-	"strconv"
 )
 
 type DashboardData struct {
@@ -18,10 +17,10 @@ func GenerateDashboard(variables parser.PortalVariables, userName string) string
 
 	for _, numVar := range variables.Number {
 		if numVar.Max == numVar.Min {
-			components.TextFields = append(components.TextFields, TextField{
+			components.NumberFields = append(components.NumberFields, NumberField{
 				Id:           numVar.Name,
 				Name:         numVar.Name,
-				InitialValue: strconv.Itoa(numVar.Value),
+				InitialValue: numVar.Value,
 			})
 		} else {
 			components.Sliders = append(components.Sliders, Slider{
@@ -43,7 +42,7 @@ func GenerateDashboard(variables parser.PortalVariables, userName string) string
 		})
 	}
 
-	tmpl, err := template.ParseFiles("patcher/static/dashboard.html", "patcher/static/setters/slider.html", "patcher/static/setters/textField.html")
+	tmpl, err := template.ParseFiles("patcher/static/dashboard.html", "patcher/static/setters/slider.html", "patcher/static/setters/textField.html", "patcher/static/setters/numberField.html")
 	if err != nil {
 		log.Fatal("Error parsing template:", err)
 	}

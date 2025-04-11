@@ -29,8 +29,6 @@ func loadVariables(path string) parser.PortalVariables {
 	return data
 }
 
-const newBranch = "nontech"
-
 func RunPatcher(port int, variablesPath string) {
 	variables := loadVariables(variablesPath)
 
@@ -44,87 +42,25 @@ func RunPatcher(port int, variablesPath string) {
 
 	r := chi.NewRouter()
 
-	r.Get("/signin", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "./patcher/static/login.html")
-	})
-
-	r.Post("/signin", func(w http.ResponseWriter, r *http.Request) {
-		var user auth.LoginUser
-
-		if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-			http.Error(w, "Invalid JSON", http.StatusBadRequest)
-			return
-		}
-
-		token, err := user.Login(configs.Users)
-		if err != nil {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
-
-		http.SetCookie(w, &http.Cookie{
-			Name:     "auth_token",
-			Value:    token,
-			Path:     "/",
-			HttpOnly: true,
-			Secure:   false,
-			SameSite: http.SameSiteStrictMode,
-			MaxAge:   3600,
-		})
-		http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
-	})
+	// Serves login page
+	r.Get("/signin", auth.GetSigninPage)
+	// Handles basic authentication
+	r.Post("/signin", auth.Signin(configs.Users))
 
 	// Protected routes
 	r.Group(func(r chi.Router) {
 		r.Use(auth.AuthenticateUser(configs.Users))
 
+		// Populates and serves the main dashboard
 		r.Get("/dashboard", func(w http.ResponseWriter, r *http.Request) {
 			user := r.Context().Value("user").(*auth.PortalUser)
 
-			// Serves the main dashboard
 			dashboard := GenerateDashboard(variables, user.Name)
 			fmt.Fprint(w, dashboard)
 		})
 
-		r.Post("/patch", func(w http.ResponseWriter, r *http.Request) {
-			var update map[string]string
-
-			err := json.NewDecoder(r.Body).Decode(&update)
-			if err != nil {
-				http.Error(w, "Invalid JSON", http.StatusBadRequest)
-				return
-			}
-
-			newVariables, err := variables.UpdateVariables(update)
-			if err != nil {
-				http.Error(w, "Could not update variables", http.StatusBadRequest)
-				return
-			}
-
-			if configs.OpenPullRequest {
-				github.CreateBranch(newBranch)
-			}
-
-			var updateBranch string
-			if configs.OpenPullRequest {
-				updateBranch = newBranch
-			} else {
-				updateBranch = github.RepoBranch
-			}
-
-			user := r.Context().Value("user").(*auth.PortalUser)
-
-			for filePath, _ := range newVariables.FileHashes {
-				fileContent, fileSha := github.GetRepoFile(filePath)
-
-				newContent := PatchFile(fileContent, newVariables)
-
-				github.UpdateFile(newContent, filePath, fileSha, updateBranch, "Eccoci qua", *user)
-			}
-
-			github.CreatePullRequest(newBranch, "Nuova pull request", "Una bellissima pull request per pull requestare")
-		})
-
+		// Applies the update to the remote repo
+		r.Post("/patch", PatcherController(variables, github, configs))
 	})
 
 	log.Printf("Starting server on http://localhost:%d...", port)

@@ -42,6 +42,7 @@
             margin-bottom: 20px;
         }
 
+        .number-field,
         .text-field,
         .slider {
             padding: 10px;
@@ -53,11 +54,13 @@
             outline: none;
         }
 
+        .number-field:focus,
         .text-field:focus,
         .slider:focus {
             box-shadow: 0 0 8px #00e600;
         }
 
+        .number-field::placeholder,
         .text-field::placeholder {
             color: #888;
         }
@@ -94,9 +97,20 @@
 <body>
     <h1>Portal: {{.UserName}}</h1>
     <div class="container">
+        <h2>Push settings</h2>
+        <div>
+            <div class="input-field">
+                <label for="insert-branch" class="slider-label">Branch</label>
+                <input type="text" class="insert-branch-field" id="insert-branch" placeholder="Branch">
+            </div>
+        </div>
         <h2>Variables</h2>
         {{range .Components.TextFields}}
         {{template "textField" .}}
+        {{end}}
+
+        {{range .Components.NumberFields}}
+        {{template "numberField" .}}
         {{end}}
 
         {{range .Components.Sliders}}
@@ -116,6 +130,11 @@
             values[field.id] = field.value;
         });
 
+        const numberFields = document.querySelectorAll('.number-field');
+        numberFields.forEach(field => {
+            values[field.id] = field.value;
+        });
+
         const sliders = document.querySelectorAll('.slider');
         sliders.forEach(slider => {
             values[slider.id] = slider.value;
@@ -127,15 +146,24 @@
     async function submitChanges() {
         const collectedValues = collectValues();
 
-        await fetch("http://localhost:8080/patch", {
+        const res = await fetch("http://localhost:8080/patch", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(collectedValues)
+            credentials: "include",
+            body: JSON.stringify({
+                update: collectedValues,
+                branchName: document.querySelector(".insert-branch-field").value
+            })
         });
 
-        alert("Submitted");
+        if (res.status !== 200) {
+            alert("Si è verificato un errore");
+        }
+        else {
+            alert("Submitted");
+        }
     }
 </script>
 

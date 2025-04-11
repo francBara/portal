@@ -47,7 +47,7 @@ func (stub *GithubStub) getGithubClient() {
 	stub.Client = github.NewClient(tc)
 }
 
-func (stub GithubStub) CreateBranch(branchName string) {
+func (stub GithubStub) CreateBranch(branchName string) error {
 	ctx := context.Background()
 
 	baseRef, _, err := stub.Client.Git.GetRef(ctx, stub.RepoOwner, stub.RepoName, "refs/heads/"+stub.RepoBranch)
@@ -63,8 +63,10 @@ func (stub GithubStub) CreateBranch(branchName string) {
 	}
 	_, _, err = stub.Client.Git.CreateRef(ctx, stub.RepoOwner, stub.RepoName, newRef)
 	if err != nil {
-		log.Fatalf("Error creating new branch: %v", err)
+		return err
 	}
+
+	return nil
 }
 
 func (stub GithubStub) GetRepoFile(filePath string) (string, string) {
