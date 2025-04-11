@@ -104,7 +104,7 @@ func parseFile(basePath string, filePath string) PortalVariables {
 					variables.Number[varName] = NumberVariable{
 						Name:     varName,
 						Value:    parsedValue,
-						Max:      100,
+						Max:      0,
 						Min:      0,
 						Step:     1,
 						FilePath: filePath,

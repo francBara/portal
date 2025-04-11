@@ -10,9 +10,10 @@ import (
 
 type DashboardData struct {
 	Components DashboarComponents
+	UserName   string
 }
 
-func GenerateDashboard(variables parser.PortalVariables) string {
+func GenerateDashboard(variables parser.PortalVariables, userName string) string {
 	var components DashboarComponents
 
 	for _, numVar := range variables.Number {
@@ -49,6 +50,7 @@ func GenerateDashboard(variables parser.PortalVariables) string {
 
 	data := DashboardData{
 		Components: components,
+		UserName:   userName,
 	}
 
 	var buf bytes.Buffer

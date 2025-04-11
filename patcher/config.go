@@ -4,17 +4,19 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"portal/patcher/auth"
 
 	"github.com/spf13/viper"
 )
 
 type PatcherConfigs struct {
-	RepoOwner  string `json:"repoOwner"`
-	RepoName   string `json:"repoName"`
-	RepoBranch string `json:"repoBranch"`
-	Pac        string `json:"pac"`
+	RepoOwner       string `json:"repoOwner"`
+	RepoName        string `json:"repoName"`
+	RepoBranch      string `json:"repoBranch"`
+	Pac             string `json:"pac"`
+	OpenPullRequest bool   `json:"openPullRequest"`
 
-	Users []PortalUser `json:"users"`
+	Users []auth.PortalUser `json:"users"`
 }
 
 var configFileCandidates = []struct {
@@ -32,7 +34,8 @@ func LoadConfigs() (PatcherConfigs, error) {
 	viper.AutomaticEnv()
 	viper.AddConfigPath(".")
 
-	viper.SetDefault("RepoBranch", "main")
+	viper.SetDefault("repoBranch", "main")
+	viper.SetDefault("openPullRequest", true)
 
 	var config PatcherConfigs
 

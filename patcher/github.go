@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"portal/patcher/auth"
 	"time"
 
 	"github.com/google/go-github/v71/github"
@@ -85,7 +86,7 @@ func (stub GithubStub) GetRepoFile(filePath string) (string, string) {
 	return decodedContent, fileContent.GetSHA()
 }
 
-func (stub GithubStub) UpdateFile(newContent string, filePath string, oldFileSha string, branch string, commitMessage string, fromUser PortalUser) {
+func (stub GithubStub) UpdateFile(newContent string, filePath string, oldFileSha string, branch string, commitMessage string, fromUser auth.PortalUser) {
 	ctx := context.Background()
 
 	options := &github.RepositoryContentFileOptions{
