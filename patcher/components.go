@@ -1,5 +1,10 @@
 package patcher
 
+type DashboarComponents struct {
+	Sliders    []Slider
+	TextFields []TextField
+}
+
 type Slider struct {
 	Id           string
 	InitialValue int

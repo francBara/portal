@@ -26,34 +26,15 @@ func loadVariables(path string) parser.PortalVariables {
 	return data
 }
 
-type PatcherConfigs struct {
-	RepoOwner  string
-	RepoName   string
-	RepoBranch string
-	Pac        string
-}
-
-func loadConfigs() PatcherConfigs {
-	file, err := os.Open("./patcher_config.json")
-	if err != nil {
-		panic(err)
-	}
-
-	var data PatcherConfigs
-	decoder := json.NewDecoder(file)
-	if err := decoder.Decode(&data); err != nil {
-		panic(err)
-	}
-	file.Close()
-
-	return data
-}
-
 const newBranch = "nontech"
 
 func RunPatcher(port int, variablesPath string) {
 	variables := loadVariables(variablesPath)
-	configs := loadConfigs()
+
+	configs, err := LoadConfigs()
+	if err != nil {
+		log.Fatalln("Could not load config file")
+	}
 
 	user := PortalUser{
 		Name:  "Marcolino",
@@ -98,7 +79,7 @@ func RunPatcher(port int, variablesPath string) {
 
 	log.Printf("Starting server on http://localhost:%d...", port)
 
-	err := http.ListenAndServe(fmt.Sprintf(":%s", strconv.Itoa(port)), nil)
+	err = http.ListenAndServe(fmt.Sprintf(":%s", strconv.Itoa(port)), nil)
 	if err != nil {
 		log.Fatalf("Server failed to start: %v", err)
 	}

@@ -4,38 +4,39 @@ import (
 	"bytes"
 	"html/template"
 	"log"
-	"math/rand"
 	"portal/parser"
 	"strconv"
 )
 
-type DashboarComponents struct {
-	Sliders    []Slider
-	TextFields []TextField
-}
-
 type DashboardData struct {
 	Components DashboarComponents
-	PatcherUrl string
 }
 
 func GenerateDashboard(variables parser.PortalVariables) string {
 	var components DashboarComponents
 
 	for _, numVar := range variables.Number {
-		components.Sliders = append(components.Sliders, Slider{
-			Id:           strconv.Itoa(rand.Intn(1000000)),
-			InitialValue: numVar.Value,
-			Min:          numVar.Min,
-			Max:          numVar.Max,
-			Step:         numVar.Step,
-			Name:         numVar.Name,
-		})
+		if numVar.Max == numVar.Min {
+			components.TextFields = append(components.TextFields, TextField{
+				Id:           numVar.Name,
+				Name:         numVar.Name,
+				InitialValue: strconv.Itoa(numVar.Value),
+			})
+		} else {
+			components.Sliders = append(components.Sliders, Slider{
+				Id:           numVar.Name,
+				InitialValue: numVar.Value,
+				Min:          numVar.Min,
+				Max:          numVar.Max,
+				Step:         numVar.Step,
+				Name:         numVar.Name,
+			})
+		}
 	}
 
 	for _, stringVar := range variables.String {
 		components.TextFields = append(components.TextFields, TextField{
-			Id:           strconv.Itoa(rand.Intn(1000000)),
+			Id:           stringVar.Name,
 			Name:         stringVar.Name,
 			InitialValue: stringVar.Value,
 		})
