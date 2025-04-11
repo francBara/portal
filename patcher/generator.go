@@ -41,7 +41,7 @@ func GenerateDashboard(variables parser.PortalVariables) string {
 		})
 	}
 
-	tmpl, err := template.ParseFiles("generator/templates/dashboard.html", "generator/templates/setters/slider.html", "generator/templates/setters/textField.html")
+	tmpl, err := template.ParseFiles("patcher/static/dashboard.html", "patcher/static/setters/slider.html", "patcher/static/setters/textField.html")
 	if err != nil {
 		log.Fatal("Error parsing template:", err)
 	}

@@ -2,10 +2,12 @@ package parser
 
 import (
 	"bufio"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strconv"
 	"strings"
 )
@@ -13,9 +15,6 @@ import (
 type ParseOptions struct {
 	Verbose bool
 }
-
-var annotationRegex = regexp.MustCompile(`//\s*@portal\s+(.*)`)
-var variableRegex = regexp.MustCompile(`(let|const|var)\s+(\w+)\s*=\s*(.+?);`)
 
 var acceptedExtensions = [4]string{".js", ".ts", ".jsx", ".tsx"}
 
@@ -45,7 +44,11 @@ func ParseProject(rootPath string, options ParseOptions) PortalVariables {
 
 			}
 
-			variables = variables.Concat(parseFile(rootPath, strings.TrimPrefix(path, rootPath)))
+			currentVariables := parseFile(rootPath, strings.TrimPrefix(path, rootPath))
+
+			if currentVariables.HasVariables() {
+				variables = variables.Merge(currentVariables)
+			}
 		}
 
 		return nil
@@ -66,20 +69,27 @@ func parseFile(basePath string, filePath string) PortalVariables {
 
 	var variables PortalVariables
 
+	variables.FileHashes = make(map[string]string)
+	variables.FileHashes[filePath] = getFileHash(file)
+
+	variables.Number = make(map[string]NumberVariable)
+	variables.String = make(map[string]StringVariable)
+
 	scanner := bufio.NewScanner(file)
+
+	file.Seek(0, io.SeekStart)
 
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		// Check for annotation
-		if matches := annotationRegex.FindStringSubmatch(line); matches != nil {
+		if matches := AnnotationRegex.FindStringSubmatch(line); matches != nil {
 			currentType := matches[1]
 
 			scanner.Scan()
 
 			line = scanner.Text()
 
-			if matches := variableRegex.FindStringSubmatch(line); matches != nil {
+			if matches := VariableRegex.FindStringSubmatch(line); matches != nil {
 				varName := matches[2]
 				value := matches[3]
 
@@ -91,22 +101,34 @@ func parseFile(basePath string, filePath string) PortalVariables {
 						panic(err)
 					}
 
-					variables.Number = append(variables.Number, NumberVariable{
-						Name:  varName,
-						Value: parsedValue,
-						Max:   100,
-						Min:   0,
-						Step:  1,
-					})
+					variables.Number[varName] = NumberVariable{
+						Name:     varName,
+						Value:    parsedValue,
+						Max:      100,
+						Min:      0,
+						Step:     1,
+						FilePath: filePath,
+					}
 				} else if currentType == "string" {
-					variables.String = append(variables.String, StringVariable{
-						Name:  varName,
-						Value: value,
-					})
+					variables.String[varName] = StringVariable{
+						Name:     varName,
+						Value:    value,
+						FilePath: filePath,
+					}
 				}
 			}
 		}
 	}
 
 	return variables
+}
+
+func getFileHash(file *os.File) string {
+	hasher := sha256.New()
+
+	if _, err := io.Copy(hasher, file); err != nil {
+		panic(err)
+	}
+
+	return hex.EncodeToString(hasher.Sum(nil))
 }

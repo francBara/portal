@@ -1,9 +1,14 @@
 package parser
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func TestParser(t *testing.T) {
 	variables := ParseProject("tests/togiftit", ParseOptions{Verbose: false})
+
+	fmt.Println(variables)
 
 	if len(variables.Number) != 1 {
 		t.Errorf("Bad number variables length: %d", len(variables.Number))
@@ -12,10 +17,10 @@ func TestParser(t *testing.T) {
 		t.Errorf("Bad string variables lenght: %d", len(variables.String))
 	}
 
-	if variables.Number[0].Name != "maxChats" || variables.Number[0].Value != 24 {
+	if variables.Number["maxChats"].Name != "maxChats" || variables.Number["maxChats"].Value != 24 {
 		t.Error("Bad number variable")
 	}
-	if variables.String[0].Name != "chatName" || variables.String[0].Value != "My Chat" {
+	if variables.String["chatName"].Name != "chatName" || variables.String["chatName"].Value != "My Chat" {
 		t.Error("Bad string variable")
 	}
 }

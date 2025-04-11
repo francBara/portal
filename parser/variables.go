@@ -1,36 +1,44 @@
 package parser
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"os"
+	"strconv"
 )
 
 type NumberVariable struct {
-	Name  string
-	Value int
-	Max   int
-	Min   int
-	Step  int
+	Name     string
+	Value    int
+	Max      int
+	Min      int
+	Step     int
+	FilePath string
 }
 
 type StringVariable struct {
-	Name  string
-	Value string
+	Name     string
+	Value    string
+	FilePath string
 }
+
+// type FileVariables struct {
+// 	Number map[string]NumberVariable
+// 	String map[string]StringVariable
+
+// 	Filepath string
+// 	Filehash string
+// }
 
 type PortalVariables struct {
-	Number []NumberVariable
-	String []StringVariable
+	Number     map[string]NumberVariable
+	String     map[string]StringVariable
+	FileHashes map[string]string
 }
 
-func (pv PortalVariables) Concat(newPv PortalVariables) PortalVariables {
-	var concatenatedPv PortalVariables
-	concatenatedPv.Number = append(pv.Number, newPv.Number...)
-	concatenatedPv.String = append(pv.String, newPv.String...)
-	return concatenatedPv
-}
-
-func (variables PortalVariables) Dump() {
+func (variables PortalVariables) DumpVariables() {
 	file, err := os.Create("variables.json")
 	if err != nil {
 		panic(err)
@@ -42,4 +50,61 @@ func (variables PortalVariables) Dump() {
 	if err := encoder.Encode(variables); err != nil {
 		panic(err)
 	}
+}
+
+func (variables PortalVariables) UpdateVariables(variablesPatch map[string]string) (PortalVariables, error) {
+	var err error
+
+	for key, value := range variablesPatch {
+		if _, ok := variables.Number[key]; ok {
+			currentVar := variables.Number[key]
+			currentVar.Value, err = strconv.Atoi(value)
+			if err != nil {
+				return variables, errors.New("could not patch variables")
+			}
+			variables.Number[key] = currentVar
+		}
+		if _, ok := variables.String[key]; ok {
+			currentVar := variables.String[key]
+			currentVar.Value = value
+			variables.String[key] = currentVar
+		}
+	}
+
+	return variables, nil
+}
+
+func (variables PortalVariables) HasVariables() bool {
+	return len(variables.Number) > 0 || len(variables.String) > 0
+}
+
+func mergeMaps[K comparable, v any](map1 map[K]v, map2 map[K]v) map[K]v {
+	newMap := make(map[K]v)
+
+	for k, v := range map1 {
+		newMap[k] = v
+	}
+	for k, v := range map2 {
+		newMap[k] = v
+	}
+
+	return newMap
+}
+
+func (variables PortalVariables) Merge(newVariables PortalVariables) PortalVariables {
+	var merged PortalVariables
+
+	merged.Number = mergeMaps(variables.Number, newVariables.Number)
+	merged.String = mergeMaps(variables.String, newVariables.String)
+	merged.FileHashes = mergeMaps(variables.FileHashes, newVariables.FileHashes)
+
+	return merged
+}
+
+func (variables PortalVariables) HasFileChanged(fileContent string, filePath string) bool {
+	hasher := sha256.New()
+	hasher.Write([]byte(fileContent))
+	hashString := hex.EncodeToString(hasher.Sum(nil))
+
+	return hashString != variables.FileHashes[filePath]
 }

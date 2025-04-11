@@ -21,7 +21,7 @@ func main() {
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			variables := parser.ParseProject(args[0], parser.ParseOptions{})
-			variables.Dump()
+			variables.DumpVariables()
 		},
 	}
 

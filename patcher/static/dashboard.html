@@ -127,7 +127,7 @@
     async function submitChanges() {
         const collectedValues = collectValues();
 
-        await fetch("{{.PatcherUrl}}", {
+        await fetch("http://localhost:8080/patch", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
