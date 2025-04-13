@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"portal/parser"
 	"portal/patcher"
@@ -21,7 +22,10 @@ func main() {
 		Short: "Parse the given project",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			variables := parser.ParseProject(args[0], parser.ParseOptions{})
+			variables, err := parser.ParseProject(args[0], parser.ParseOptions{})
+			if err != nil {
+				log.Fatalln("Error parsing project: " + err.Error())
+			}
 			variables.DumpVariables()
 		},
 	}

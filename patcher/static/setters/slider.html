@@ -1,8 +1,8 @@
 {{define "slider"}}
-<div class="input-field">
-    <label for="{{.Name}}" class="slider-label">{{.Name}}</label>
-    <input type="range" class="slider" id="{{.Id}}" min="{{.Min}}" max="{{.Max}}" value="{{.InitialValue}}"
-        oninput="updateSliderValue('{{.Name}}', this.value)">
+<div class="variable">
+    <label for="{{.Name}}" class="var-label">{{.Name}}</label>
+    <input type="range" class="setter setter-slider" id="{{.Id}}" min="{{.Min}}" max="{{.Max}}"
+        value="{{.InitialValue}}" oninput="updateSliderValue('{{.Name}}', this.value)">
     <div id="{{.Name}}-slider-value" class="slider-value">{{.InitialValue}}</div>
 </div>
 
@@ -16,13 +16,8 @@
 {{end}}
 
 <style>
-    .slider {
+    .setter-slider {
         width: 100%;
-    }
-
-    .slider-label {
-        margin-bottom: 10px;
-        font-size: 1.1em;
     }
 
     .slider-value {

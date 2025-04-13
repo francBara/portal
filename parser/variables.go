@@ -5,32 +5,29 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"maps"
 	"os"
 	"strconv"
 )
 
-type NumberVariable struct {
+type PortalVariable struct {
 	Name     string
-	Value    int
-	Max      int
-	Min      int
-	Step     int
+	Group    string
 	FilePath string
+}
+
+type NumberVariable struct {
+	PortalVariable
+	Value int
+	Max   int
+	Min   int
+	Step  int
 }
 
 type StringVariable struct {
-	Name     string
-	Value    string
-	FilePath string
+	PortalVariable
+	Value string
 }
-
-// type FileVariables struct {
-// 	Number map[string]NumberVariable
-// 	String map[string]StringVariable
-
-// 	Filepath string
-// 	Filehash string
-// }
 
 type PortalVariables struct {
 	Number     map[string]NumberVariable
@@ -81,12 +78,8 @@ func (variables PortalVariables) HasVariables() bool {
 func mergeMaps[K comparable, v any](map1 map[K]v, map2 map[K]v) map[K]v {
 	newMap := make(map[K]v)
 
-	for k, v := range map1 {
-		newMap[k] = v
-	}
-	for k, v := range map2 {
-		newMap[k] = v
-	}
+	maps.Copy(newMap, map1)
+	maps.Copy(newMap, map2)
 
 	return newMap
 }

@@ -1,6 +1,13 @@
 {{define "numberField"}}
-<div class="input-field">
-    <label for="{{.Name}}" class="slider-label">{{.Name}}</label>
-    <input type="number" class="number-field" id="{{.Id}}" placeholder="Input number" value="{{.InitialValue}}">
+<div class="variable">
+    <label for="{{.Name}}" class="var-label">{{.Name}}</label>
+    <input type="number" class="setter setter-number-field" id="{{.Id}}" placeholder="Input number"
+        value="{{.InitialValue}}">
 </div>
 {{end}}
+
+<style>
+    .setter-number-field:placeholder {
+        color: #888;
+    }
+</style>

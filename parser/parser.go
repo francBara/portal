@@ -8,7 +8,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 )
 
@@ -18,7 +17,7 @@ type ParseOptions struct {
 
 var acceptedExtensions = [4]string{".js", ".ts", ".jsx", ".tsx"}
 
-func ParseProject(rootPath string, options ParseOptions) PortalVariables {
+func ParseProject(rootPath string, options ParseOptions) (PortalVariables, error) {
 	var variables PortalVariables
 
 	err := filepath.Walk(rootPath, func(path string, info os.FileInfo, err error) error {
@@ -41,10 +40,12 @@ func ParseProject(rootPath string, options ParseOptions) PortalVariables {
 
 			if options.Verbose {
 				fmt.Printf("Visiting %s\n", path)
-
 			}
 
-			currentVariables := parseFile(rootPath, strings.TrimPrefix(path, rootPath))
+			currentVariables, err := parseFile(rootPath, strings.TrimPrefix(path, rootPath))
+			if err != nil {
+				return err
+			}
 
 			if currentVariables.HasVariables() {
 				variables = variables.Merge(currentVariables)
@@ -55,12 +56,12 @@ func ParseProject(rootPath string, options ParseOptions) PortalVariables {
 	})
 
 	if err != nil {
-		fmt.Printf("Error during directory walk: %v\n", err)
+		return PortalVariables{}, err
 	}
-	return variables
+	return variables, nil
 }
 
-func parseFile(basePath string, filePath string) PortalVariables {
+func parseFile(basePath string, filePath string) (PortalVariables, error) {
 	file, err := os.Open(fmt.Sprintf("%s/%s", basePath, filePath))
 	if err != nil {
 		panic(err)
@@ -83,44 +84,30 @@ func parseFile(basePath string, filePath string) PortalVariables {
 		line := scanner.Text()
 
 		if matches := AnnotationRegex.FindStringSubmatch(line); matches != nil {
-			currentType := matches[1]
+			arguments := parseAnnotationArguments(matches[1])
 
 			scanner.Scan()
-
 			line = scanner.Text()
 
 			if matches := VariableRegex.FindStringSubmatch(line); matches != nil {
 				varName := matches[2]
 				value := matches[3]
 
-				value = strings.Trim(value, "\"'")
+				varType := getVariableType(value)
 
-				if currentType == "number" {
-					parsedValue, err := strconv.Atoi(value)
+				if varType == "number" {
+					variables.Number[varName], err = numberVariableFactory(varName, value, filePath, arguments)
 					if err != nil {
-						panic(err)
+						return PortalVariables{}, err
 					}
-
-					variables.Number[varName] = NumberVariable{
-						Name:     varName,
-						Value:    parsedValue,
-						Max:      0,
-						Min:      0,
-						Step:     1,
-						FilePath: filePath,
-					}
-				} else if currentType == "string" {
-					variables.String[varName] = StringVariable{
-						Name:     varName,
-						Value:    value,
-						FilePath: filePath,
-					}
+				} else if varType == "string" {
+					variables.String[varName] = stringVariableFactory(varName, value, arguments)
 				}
 			}
 		}
 	}
 
-	return variables
+	return variables, nil
 }
 
 func getFileHash(file *os.File) string {

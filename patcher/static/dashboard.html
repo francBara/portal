@@ -23,7 +23,31 @@
             font-size: 2em;
         }
 
-        /* Container Styling */
+        .variable {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+        }
+
+        .var-label {
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .setter {
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            background-color: #2d2d2d;
+            color: #e0e0e0;
+            font-size: 1em;
+            outline: none;
+        }
+
+        .setter:focus {
+            box-shadow: 0 0 8px #00e600;
+        }
+
         .container {
             max-width: 800px;
             margin: 0 auto;
@@ -34,38 +58,13 @@
             background-color: #1f1f1f;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            gap: 20px;
         }
 
-        .input-field {
-            display: flex;
-            flex-direction: column;
+        .container-settings {
             margin-bottom: 20px;
         }
 
-        .number-field,
-        .text-field,
-        .slider {
-            padding: 10px;
-            border: none;
-            border-radius: 6px;
-            background-color: #2d2d2d;
-            color: #e0e0e0;
-            font-size: 1em;
-            outline: none;
-        }
-
-        .number-field:focus,
-        .text-field:focus,
-        .slider:focus {
-            box-shadow: 0 0 8px #00e600;
-        }
-
-        .number-field::placeholder,
-        .text-field::placeholder {
-            color: #888;
-        }
-
-        /* Button Styling */
         .submit-button {
             background-color: #00e600;
             color: #181818;
@@ -81,7 +80,6 @@
             background-color: #00b300;
         }
 
-        /* Media Queries for Responsiveness */
         @media (max-width: 600px) {
             h1 {
                 font-size: 1.5em;
@@ -96,7 +94,7 @@
 
 <body>
     <h1>Portal: {{.UserName}}</h1>
-    <div class="container">
+    <div class="container container-settings">
         <h2>Push settings</h2>
         <div>
             <div class="input-field">
@@ -104,6 +102,9 @@
                 <input type="text" class="insert-branch-field" id="insert-branch" placeholder="Branch">
             </div>
         </div>
+    </div>
+
+    <div class="container">
         <h2>Variables</h2>
         {{range .Components.TextFields}}
         {{template "textField" .}}

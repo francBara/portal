@@ -19,13 +19,17 @@ let asd = "asdf";
 	newVariables := parser.PortalVariables{
 		Number: map[string]parser.NumberVariable{
 			"b": {
-				Name:  "b",
+				PortalVariable: parser.PortalVariable{
+					Name: "b",
+				},
 				Value: 100,
 			},
 		},
 		String: map[string]parser.StringVariable{
 			"asd": {
-				Name:  "asd",
+				PortalVariable: parser.PortalVariable{
+					Name: "asd",
+				},
 				Value: "qwerty",
 			},
 		},

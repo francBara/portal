@@ -6,7 +6,10 @@ import (
 )
 
 func TestParser(t *testing.T) {
-	variables := ParseProject("tests/togiftit", ParseOptions{Verbose: false})
+	variables, err := ParseProject("tests/togiftit", ParseOptions{Verbose: false})
+	if err != nil {
+		t.Errorf("Error parsing project")
+	}
 
 	fmt.Println(variables)
 
