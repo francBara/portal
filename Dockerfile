@@ -14,6 +14,9 @@ FROM alpine:latest
 WORKDIR /root/
 
 COPY --from=builder /app/portal .
+COPY --from=builder /app/patcher_config.json .
+COPY --from=builder /app/variables.json .
+COPY --from=builder /app/patcher/static ./patcher/static
 
 EXPOSE 8080
 
