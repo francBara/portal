@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"portal/internal/patcher/auth"
+	"portal/internal/patcher/server/auth"
 
 	"github.com/spf13/viper"
 )

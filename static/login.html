@@ -6,8 +6,19 @@
     <title>Login</title>
     <style>
         body {
-            font-family: sans-serif;
-            margin: 2rem;
+            font-family: "Courier New", Courier, monospace;
+            margin: 0;
+            padding: 16px;
+            padding-top: 100px;
+            background-color: #181818;
+            color: #e0e0e0;
+        }
+
+        h1 {
+            color: #00e600;
+            text-align: center;
+            margin-top: 20px;
+            font-size: 2em;
         }
 
         input,
@@ -15,6 +26,48 @@
             display: block;
             margin: 0.5rem 0;
             padding: 0.5rem;
+        }
+
+        .login-div {
+            display: flex;
+            flex-direction: column;
+            max-width: 800px;
+            margin: 0 auto;
+            padding-top: 25px;
+            padding-left: 25px;
+            padding-right: 25px;
+            padding-bottom: 25px;
+            background-color: #1f1f1f;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .login-form {
+            margin: 0 auto;
+            width: 50%;
+        }
+
+        .login-input {
+            background-color: #2d2d2d;
+            color: #e0e0e0;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            outline: none;
+            width: 100%;
+        }
+
+        .login-button {
+            background-color: #00e600;
+            color: #181818;
+            padding: 12px 20px;
+            width: 100%;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1em;
+            margin-top: 20px;
         }
 
         #error {
@@ -27,12 +80,14 @@
 <body>
     <h1>Login</h1>
 
-    <form id="login-form">
-        <input type="email" id="email" placeholder="Email" required />
-        <input type="password" id="password" placeholder="Password" required />
-        <button type="submit">Sign In</button>
-        <div id="error"></div>
-    </form>
+    <div class="login-div">
+        <form class="login-form" id="login-form">
+            <input class="login-input" type="email" id="email" placeholder="Email" required />
+            <input class="login-input" type="password" id="password" placeholder="Password" required />
+            <button class="login-button" type="submit">Sign In</button>
+            <div id="error"></div>
+        </form>
+    </div>
 
     <script>
         const form = document.getElementById("login-form");

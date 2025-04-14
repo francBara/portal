@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"os"
 	"portal/internal/patcher"
-	"portal/internal/patcher/auth"
 	"portal/internal/patcher/generator"
+	"portal/internal/patcher/server/auth"
 	"portal/shared"
 	"strconv"
 

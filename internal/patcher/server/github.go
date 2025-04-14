@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
-	"portal/internal/patcher/auth"
+	"portal/internal/patcher/server/auth"
 	"time"
 
 	"github.com/google/go-github/v71/github"

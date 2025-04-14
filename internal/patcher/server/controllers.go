@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"portal/internal/patcher"
-	"portal/internal/patcher/auth"
+	"portal/internal/patcher/server/auth"
 	"portal/shared"
 )
 
