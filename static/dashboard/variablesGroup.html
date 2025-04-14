@@ -1,0 +1,16 @@
+{{define "variablesGroup"}}
+<div class="container">
+    <h2>{{.Group}}</h2>
+    {{range .TextFields}}
+    {{template "textField" .}}
+    {{end}}
+
+    {{range .NumberFields}}
+    {{template "numberField" .}}
+    {{end}}
+
+    {{range .Sliders}}
+    {{template "slider" .}}
+    {{end}}
+</div>
+{{end}}
