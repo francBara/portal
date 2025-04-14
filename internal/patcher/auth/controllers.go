@@ -33,6 +33,5 @@ func Signin(users []PortalUser) func(w http.ResponseWriter, r *http.Request) {
 			SameSite: http.SameSiteStrictMode,
 			MaxAge:   3600,
 		})
-		http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
 	}
 }

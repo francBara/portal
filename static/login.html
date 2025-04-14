@@ -58,11 +58,6 @@
                     throw new Error(err || "Login failed");
                 }
 
-                const data = await response.json();
-                const token = data.token;
-
-                sessionStorage.setItem("jwt", token);
-
                 window.location.href = "/dashboard";
             } catch (err) {
                 errorDiv.textContent = err.message;

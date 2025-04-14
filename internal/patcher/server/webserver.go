@@ -44,6 +44,10 @@ func RunPatcher(port int, variablesPath string) {
 
 	r := chi.NewRouter()
 
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/signin", http.StatusSeeOther)
+	})
+
 	// Serves login page
 	r.Get("/signin", auth.GetSigninPage)
 	// Handles basic authentication
