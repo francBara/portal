@@ -6,11 +6,13 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"portal/internal/patcher"
 	"portal/internal/patcher/generator"
 	"portal/internal/patcher/server/auth"
 	"portal/shared"
 	"strconv"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -31,6 +33,18 @@ func loadVariables(path string) shared.PortalVariables {
 	return data
 }
 
+func isAsset(path string) bool {
+	return strings.HasSuffix(path, ".js") ||
+		strings.HasSuffix(path, ".css") ||
+		strings.HasSuffix(path, ".map") ||
+		strings.HasSuffix(path, ".json") ||
+		strings.HasSuffix(path, ".ico") ||
+		strings.HasSuffix(path, ".png") ||
+		strings.HasSuffix(path, ".jpg") ||
+		strings.HasSuffix(path, ".jpeg") ||
+		strings.HasPrefix(path, "/assets/")
+}
+
 func RunPatcher(port int, variablesPath string) {
 	variables := loadVariables(variablesPath)
 
@@ -44,14 +58,32 @@ func RunPatcher(port int, variablesPath string) {
 
 	r := chi.NewRouter()
 
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/signin", http.StatusSeeOther)
+	staticDir := "./static"
+
+	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
+		requestPath := r.URL.Path
+		fullPath := filepath.Join(staticDir, requestPath)
+
+		// Check if file exists
+		info, err := os.Stat(fullPath)
+		if err == nil && !info.IsDir() {
+			http.ServeFile(w, r, fullPath)
+			return
+		}
+
+		// Block fallback for known asset paths
+		if isAsset(requestPath) {
+			http.NotFound(w, r)
+			return
+		}
+
+		// Otherwise, fallback to index.html for Vue SPA
+		http.ServeFile(w, r, filepath.Join(staticDir, "index.html"))
 	})
 
-	// Serves login page
-	r.Get("/signin", auth.GetSigninPage)
+	// API routes
 	// Handles basic authentication
-	r.Post("/signin", auth.Signin(configs.Users))
+	r.Post("/api/signin", auth.Signin(configs.Users))
 
 	// Protected routes
 	r.Group(func(r chi.Router) {
