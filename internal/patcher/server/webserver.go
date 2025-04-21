@@ -9,6 +9,7 @@ import (
 	"portal/internal/patcher"
 	"portal/internal/patcher/generator"
 	"portal/internal/patcher/server/auth"
+	"portal/internal/patcher/server/preview"
 	"portal/shared"
 	"strconv"
 
@@ -39,6 +40,8 @@ func RunPatcher(port int, variablesPath string) {
 		log.Fatalln("Could not load config file")
 	}
 
+	go preview.ServePreview("https://github.com/togiftit/togiftit-web", "demo/portal")
+
 	var github GithubStub
 	github.Init(configs.RepoName, configs.RepoOwner, configs.RepoBranch, configs.Pac)
 
@@ -67,6 +70,8 @@ func RunPatcher(port int, variablesPath string) {
 
 		// Applies the update to the remote repo
 		r.Post("/patch", PatcherController(variables, github, configs))
+
+		r.Post("/preview/update", preview.UpdatePreview(variables))
 	})
 
 	log.Printf("Starting server on http://localhost:%d...", port)

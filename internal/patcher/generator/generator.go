@@ -17,13 +17,13 @@ type dashboardData struct {
 func GenerateDashboard(variables shared.PortalVariables, userName string) string {
 	dashboardGroups := make(dashboardComponents)
 
-	for _, numVar := range variables.Number {
+	for _, numVar := range variables.Integer {
 		currentFields := dashboardGroups[numVar.Group]
 
 		if numVar.Max == numVar.Min {
 			currentFields.NumberFields = append(currentFields.NumberFields, NumberField{
 				Id:           numVar.Name,
-				Name:         numVar.Name,
+				Name:         numVar.DisplayName,
 				InitialValue: numVar.Value,
 			})
 		} else {
@@ -33,12 +33,14 @@ func GenerateDashboard(variables shared.PortalVariables, userName string) string
 				Min:          numVar.Min,
 				Max:          numVar.Max,
 				Step:         numVar.Step,
-				Name:         numVar.Name,
+				Name:         numVar.DisplayName,
 			})
 		}
 
 		dashboardGroups[numVar.Group] = currentFields
 	}
+
+	//TODO: Add float generator
 
 	for _, stringVar := range variables.String {
 		currentFields := dashboardGroups[stringVar.Group]

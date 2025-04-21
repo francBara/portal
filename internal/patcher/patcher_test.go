@@ -17,7 +17,7 @@ let asd = "asdf";
 `
 
 	newVariables := shared.PortalVariables{
-		Number: map[string]shared.NumberVariable{
+		Integer: map[string]shared.IntVariable{
 			"b": {
 				PortalVariable: shared.PortalVariable{
 					Name: "b",

@@ -74,7 +74,8 @@ func parseFile(basePath string, filePath string, options ParseOptions) (shared.P
 	variables.FileHashes = make(map[string]string)
 	variables.FileHashes[filePath] = getFileHash(file)
 
-	variables.Number = make(map[string]shared.NumberVariable)
+	variables.Integer = make(map[string]shared.IntVariable)
+	variables.Float = make(map[string]shared.FloatVariable)
 	variables.String = make(map[string]shared.StringVariable)
 
 	scanner := bufio.NewScanner(file)
@@ -104,10 +105,15 @@ func parseFile(basePath string, filePath string, options ParseOptions) (shared.P
 					fmt.Printf("Variable: %s\n", line)
 				}
 
-				varType := getVariableType(value)
+				varType := GetVariableType(value)
 
-				if varType == "number" {
-					variables.Number[varName], err = numberVariableFactory(varName, value, filePath, arguments)
+				if varType == "integer" {
+					variables.Integer[varName], err = numberVariableFactory(varName, value, filePath, arguments)
+					if err != nil {
+						return shared.PortalVariables{}, err
+					}
+				} else if varType == "float" {
+					variables.Float[varName], err = floatVariableFactory(varName, value, filePath, arguments)
 					if err != nil {
 						return shared.PortalVariables{}, err
 					}

@@ -14,6 +14,18 @@
             padding: 16px;
             background-color: #181818;
             color: #e0e0e0;
+            display: flex;
+            flex-direction: row;
+        }
+
+        .settersSection {
+            width: 33%;
+        }
+
+        .previewSection {
+            height: 100vh;
+            width: 50%;
+            flex: 1
         }
 
         h1 {
@@ -93,41 +105,36 @@
 </head>
 
 <body>
-    <h1>Portal: {{.UserName}}</h1>
-    <div class="container container-settings">
-        <h2>Push settings</h2>
-        <div>
-            <div class="input-field">
-                <label for="insert-branch" class="slider-label">Branch</label>
-                <input type="text" class="insert-branch-field" id="insert-branch" placeholder="Branch">
+    <div class="settersSection">
+        <h1>Portal: {{.UserName}}</h1>
+        <div class="container container-settings">
+            <h2>Push settings</h2>
+            <div>
+                <div class="input-field">
+                    <label for="insert-branch" class="slider-label">Branch</label>
+                    <input type="text" class="insert-branch-field" id="insert-branch" placeholder="Branch">
+                </div>
             </div>
         </div>
+
+        {{range .VariablesGroups}}
+        {{template "variablesGroup" .}}
+        {{end}}
+
+        <button class="submit-button" onclick="submitChanges()">Submit</button>
     </div>
-
-    {{range .VariablesGroups}}
-    {{template "variablesGroup" .}}
-    {{end}}
-
-    <button class="submit-button" onclick="submitChanges()">Submit</button>
+    <div class="previewSection">
+        <iframe src="http://localhost:3000" width="100%" height="100%" style="border: none;"></iframe>
+    </div>
 </body>
 
 <script>
     function collectValues() {
         let values = {};
 
-        const textFields = document.querySelectorAll('.text-field');
-        textFields.forEach(field => {
+        const setters = document.querySelectorAll('.setter');
+        setters.forEach(field => {
             values[field.id] = field.value;
-        });
-
-        const numberFields = document.querySelectorAll('.number-field');
-        numberFields.forEach(field => {
-            values[field.id] = field.value;
-        });
-
-        const sliders = document.querySelectorAll('.slider');
-        sliders.forEach(slider => {
-            values[slider.id] = slider.value;
         });
 
         return values;
@@ -153,6 +160,23 @@
         }
         else {
             alert("Submitted");
+        }
+    }
+
+    async function updatePreview() {
+        const collectedValues = collectValues();
+
+        const res = await fetch("http://localhost:8080/preview/update", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: "include",
+            body: JSON.stringify(collectedValues)
+        });
+
+        if (res.status !== 200) {
+            alert("Si è verificato un errore");
         }
     }
 </script>

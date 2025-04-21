@@ -2,7 +2,7 @@
 <div class="variable">
     <label for="{{.Name}}" class="var-label">{{.Name}}</label>
     <input type="range" class="setter setter-slider" id="{{.Id}}" min="{{.Min}}" max="{{.Max}}"
-        value="{{.InitialValue}}" oninput="updateSliderValue('{{.Name}}', this.value)">
+        value="{{.InitialValue}}" oninput="updateSliderValue('{{.Name}}', this.value)" onchange="updatePreview()">
     <div id="{{.Name}}-slider-value" class="slider-value">{{.InitialValue}}</div>
 </div>
 

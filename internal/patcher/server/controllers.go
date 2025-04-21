@@ -8,7 +8,7 @@ import (
 	"portal/shared"
 )
 
-type patcherPayload struct {
+type PatcherPayload struct {
 	Update        map[string]string `json:"update"`
 	BranchName    string            `json:"branchName"`
 	CommitMessage string            `json:"commitMessage"`
@@ -16,7 +16,7 @@ type patcherPayload struct {
 
 func PatcherController(variables shared.PortalVariables, github GithubStub, configs patcher.PatcherConfigs) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var payload patcherPayload
+		var payload PatcherPayload
 
 		err := json.NewDecoder(r.Body).Decode(&payload)
 		if err != nil {

@@ -7,6 +7,7 @@ toolchain go1.23.8
 require golang.org/x/oauth2 v0.29.0
 
 require (
+	github.com/evanw/esbuild v0.25.2
 	github.com/fsnotify/fsnotify v1.8.0 // indirect
 	github.com/go-chi/chi/v5 v5.2.1 // indirect
 	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect

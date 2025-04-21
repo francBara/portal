@@ -47,24 +47,28 @@ func parseAnnotationArguments(arguments string) portalArguments {
 	mappedArguments := make(map[string]string)
 
 	for _, m := range matches {
-		mappedArguments[m[1]] = m[2]
+		mappedArguments[m[1]] = strings.Trim(m[2], "\"")
 	}
 
 	return mappedArguments
 }
 
-func getVariableType(value string) string {
+func GetVariableType(value string) string {
 	if value[0] == '"' && value[len(value)-1] == '"' || value[0] == '\'' && value[len(value)-1] == '\'' {
 		return "string"
+	} else if strings.Contains(value, ".") {
+		return "float"
 	} else {
-		return "number"
+		return "integer"
 	}
 }
 
-func numberVariableFactory(name string, value string, filePath string, options portalArguments) (shared.NumberVariable, error) {
+//TODO: Modularize factories code
+
+func numberVariableFactory(name string, value string, filePath string, options portalArguments) (shared.IntVariable, error) {
 	parsedValue, err := strconv.Atoi(value)
 	if err != nil {
-		return shared.NumberVariable{}, err
+		return shared.IntVariable{}, err
 	}
 
 	group := options.getGroup()
@@ -73,13 +77,50 @@ func numberVariableFactory(name string, value string, filePath string, options p
 	minValue, _ := options.getNum("min")
 	step, _ := options.getNum("step")
 
-	return shared.NumberVariable{
+	displayName, _ := options.getString("name")
+	if displayName == "" {
+		displayName = name
+	}
+
+	return shared.IntVariable{
 		PortalVariable: shared.PortalVariable{
-			Name:     name,
-			Group:    group,
-			FilePath: filePath,
+			Name:        name,
+			Group:       group,
+			DisplayName: displayName,
+			FilePath:    filePath,
 		},
 		Value: parsedValue,
+		Max:   maxValue,
+		Min:   minValue,
+		Step:  step,
+	}, nil
+}
+
+func floatVariableFactory(name string, value string, filePath string, options portalArguments) (shared.FloatVariable, error) {
+	parsedValue, err := strconv.ParseFloat(value, 32)
+	if err != nil {
+		return shared.FloatVariable{}, err
+	}
+
+	group := options.getGroup()
+
+	maxValue, _ := options.getNum("max")
+	minValue, _ := options.getNum("min")
+	step, _ := options.getNum("step")
+
+	displayName, _ := options.getString("name")
+	if displayName == "" {
+		displayName = name
+	}
+
+	return shared.FloatVariable{
+		PortalVariable: shared.PortalVariable{
+			Name:        name,
+			DisplayName: displayName,
+			Group:       group,
+			FilePath:    filePath,
+		},
+		Value: float32(parsedValue),
 		Max:   maxValue,
 		Min:   minValue,
 		Step:  step,
@@ -91,11 +132,17 @@ func stringVariableFactory(name string, value string, filePath string, options p
 
 	group := options.getGroup()
 
+	displayName, _ := options.getString("name")
+	if displayName == "" {
+		displayName = name
+	}
+
 	return shared.StringVariable{
 		PortalVariable: shared.PortalVariable{
-			Name:     name,
-			Group:    group,
-			FilePath: filePath,
+			Name:        name,
+			DisplayName: displayName,
+			Group:       group,
+			FilePath:    filePath,
 		},
 		Value: value,
 	}
