@@ -45,3 +45,40 @@ let asd = "asdf";
 		t.Errorf("Wrong patched line %s", newContent[6])
 	}
 }
+
+func TestTailwindPatcher(t *testing.T) {
+	content := `<div/ className={"
+//@portal
+border-round-2
+
+//@portal
+duration-[1000ms]
+"}
+`
+	newVariables := shared.PortalVariables{
+		Integer: map[string]shared.IntVariable{
+			"border-round": {
+				PortalVariable: shared.PortalVariable{
+					Name: "border-round",
+				},
+				Value: 100,
+			},
+			"duration": {
+				PortalVariable: shared.PortalVariable{
+					Name: "duration",
+				},
+				Value: 247,
+			},
+		},
+	}
+
+	newContent := strings.Split(PatchFile(content, newVariables), "\n")
+
+	if newContent[2] != "border-round-100" {
+		t.Errorf("Wrong patched line %s", newContent[2])
+	}
+
+	if newContent[5] != "duration-[247ms]" {
+		t.Errorf("Wrong patched line %s", newContent[5])
+	}
+}

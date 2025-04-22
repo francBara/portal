@@ -179,6 +179,12 @@
             alert("Si è verificato un errore");
         }
     }
+
+    function updateSliderValue(slider) {
+        const display = document.getElementById(`${slider.id}-slider-value`);
+        if (display) display.textContent = slider.value;
+    }
+</script>
 </script>
 
 </html>

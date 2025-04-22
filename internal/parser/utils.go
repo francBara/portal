@@ -2,6 +2,7 @@ package parser
 
 import (
 	"portal/shared"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -61,6 +62,21 @@ func GetVariableType(value string) string {
 	} else {
 		return "integer"
 	}
+}
+
+func IsTailwindLine(line string) bool {
+	return strings.Contains(line, "-")
+}
+
+// Parses a tailwind line returning parameter name and numeric value
+func ParseTailwindLine(line string) (string, string) {
+	line = strings.TrimSpace(line)
+	valueIdx := strings.LastIndex(line, "-")
+
+	varName := line[:valueIdx]
+	value := regexp.MustCompile(`\D`).ReplaceAllString(line[valueIdx+1:], "")
+
+	return varName, value
 }
 
 //TODO: Modularize factories code

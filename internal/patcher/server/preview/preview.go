@@ -11,7 +11,7 @@ import (
 
 const previewFolderName = "app-preview"
 
-func cloneRepo(repoUrl string, branchName string) {
+func cloneRepo(repoUrl string, branchName string, pac string) {
 	info, err := os.Stat(previewFolderName)
 
 	if err == nil && info.IsDir() {
@@ -19,7 +19,24 @@ func cloneRepo(repoUrl string, branchName string) {
 		return
 	}
 
-	cmd := exec.Command("git", "clone", "--recurse-submodules", "--branch", branchName, "--single-branch", repoUrl, previewFolderName)
+	fmt.Println("Cloning", repoUrl, branchName)
+
+	cred := fmt.Sprintf("https://%s:%s@github.com\n", "francBara", pac)
+	err = os.WriteFile(os.Getenv("HOME")+"/.git-credentials", []byte(cred), 0600)
+	if err != nil {
+		panic("error writing git credentials: " + err.Error())
+	}
+
+	cmd := exec.Command("git", "config", "--global", "credential.helper", "store")
+	err = cmd.Run()
+	if err != nil {
+		panic("error git config credentials: " + err.Error())
+	}
+
+	cmd = exec.Command("git", "clone", "--recurse-submodules", "--branch", branchName, "--single-branch", repoUrl, previewFolderName)
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 
 	err = cmd.Run()
 	if err != nil {
@@ -53,8 +70,8 @@ func startDevServer() {
 	}
 }
 
-func ServePreview(repoUrl string, branchName string) *httputil.ReverseProxy {
-	cloneRepo(repoUrl, branchName)
+func ServePreview(repoUrl string, branchName string, pac string) *httputil.ReverseProxy {
+	cloneRepo(repoUrl, branchName, pac)
 
 	fmt.Println("Cloned preview repo")
 

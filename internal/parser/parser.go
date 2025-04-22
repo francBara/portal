@@ -43,7 +43,7 @@ func ParseProject(rootPath string, options ParseOptions) (shared.PortalVariables
 				fmt.Printf("Visiting %s\n", path)
 			}
 
-			currentVariables, err := parseFile(rootPath, strings.TrimPrefix(path, rootPath), options)
+			currentVariables, err := parseFile(rootPath, strings.TrimPrefix(path, strings.Trim(rootPath, "./")), options)
 			if err != nil {
 				return err
 			}
@@ -119,6 +119,19 @@ func parseFile(basePath string, filePath string, options ParseOptions) (shared.P
 					}
 				} else if varType == "string" {
 					variables.String[varName] = stringVariableFactory(varName, value, filePath, arguments)
+				}
+			} else if shared.TailwindRegex.MatchString(line) {
+				varName, value := ParseTailwindLine(line)
+
+				_, ok := variables.Integer[varName]
+
+				if ok {
+					varName += shared.GetRandomString(4)
+				}
+
+				variables.Integer[varName], err = numberVariableFactory(varName, value, filePath, arguments)
+				if err != nil {
+					return shared.PortalVariables{}, err
 				}
 			}
 		}

@@ -71,6 +71,19 @@ func PatchFile(content string, newVariables shared.PortalVariables) string {
 
 					newContent = append(newContent, newLine)
 				}
+			} else if shared.TailwindRegex.MatchString(line) {
+				varName, _ := parser.ParseTailwindLine(line)
+
+				newVar, ok := newVariables.Integer[varName]
+				if !ok {
+					fmt.Printf("Tailwind variable %s not found in new variables", varName)
+					newContent = append(newContent, line)
+					continue
+				}
+
+				newLine := UpdateTailwindLine(line, newVar.Value)
+
+				newContent = append(newContent, newLine)
 			}
 		} else {
 			newContent = append(newContent, line)

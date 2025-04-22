@@ -40,7 +40,7 @@ func RunPatcher(port int, variablesPath string) {
 		log.Fatalln("Could not load config file")
 	}
 
-	go preview.ServePreview("https://github.com/togiftit/togiftit-web", "demo/portal")
+	go preview.ServePreview("https://github.com/togiftit/togiftit-web", "demo/portal", configs.Pac)
 
 	var github GithubStub
 	github.Init(configs.RepoName, configs.RepoOwner, configs.RepoBranch, configs.Pac)

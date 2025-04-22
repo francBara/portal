@@ -2,17 +2,9 @@
 <div class="variable">
     <label for="{{.Name}}" class="var-label">{{.Name}}</label>
     <input type="range" class="setter setter-slider" id="{{.Id}}" min="{{.Min}}" max="{{.Max}}"
-        value="{{.InitialValue}}" oninput="updateSliderValue('{{.Name}}', this.value)" onchange="updatePreview()">
-    <div id="{{.Name}}-slider-value" class="slider-value">{{.InitialValue}}</div>
+        value="{{.InitialValue}}" oninput="updateSliderValue(this)" onchange="updatePreview()">
+    <div id="{{.Id}}-slider-value" class="slider-value">{{.InitialValue}}</div>
 </div>
-
-<script>
-    function updateSliderValue() {
-        var slider = document.getElementById("{{.Name}}");
-        var sliderValue = document.getElementById("{{.Name}}-slider-value");
-        sliderValue.textContent = slider.value;
-    }
-</script>
 {{end}}
 
 <style>
