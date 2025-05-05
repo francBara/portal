@@ -6,10 +6,11 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"portal/internal/patcher"
 	"portal/internal/patcher/generator"
-	"portal/internal/patcher/server/auth"
-	"portal/internal/patcher/server/preview"
+	"portal/internal/server/auth"
+	"portal/internal/server/controllers"
+	"portal/internal/server/preview"
+	"portal/internal/server/utils"
 	"portal/shared"
 	"strconv"
 
@@ -32,17 +33,19 @@ func loadVariables(path string) shared.PortalVariables {
 	return data
 }
 
-func RunPatcher(port int, variablesPath string) {
+func RunServer(port int, variablesPath string) {
 	variables := loadVariables(variablesPath)
 
-	configs, err := patcher.LoadConfigs()
+	configs, err := utils.LoadConfigs()
 	if err != nil {
 		log.Fatalln("Could not load config file")
 	}
 
-	go preview.ServePreview("https://github.com/togiftit/togiftit-web", "demo/portal", configs.Pac)
+	if configs.ServePreview {
+		go preview.ServePreview("https://github.com/togiftit/togiftit-web", "demo/portal", configs.Pac)
+	}
 
-	var github GithubStub
+	var github utils.GithubStub
 	github.Init(configs.RepoName, configs.RepoOwner, configs.RepoBranch, configs.Pac)
 
 	r := chi.NewRouter()
@@ -51,8 +54,6 @@ func RunPatcher(port int, variablesPath string) {
 		http.Redirect(w, r, "/signin", http.StatusSeeOther)
 	})
 
-	// Serves login page
-	r.Get("/signin", auth.GetSigninPage)
 	// Handles basic authentication
 	r.Post("/signin", auth.Signin(configs.Users))
 
@@ -68,8 +69,10 @@ func RunPatcher(port int, variablesPath string) {
 			fmt.Fprint(w, dashboard)
 		})
 
+		r.Get("/variables", controllers.GetVariables(variables))
+
 		// Applies the update to the remote repo
-		r.Post("/patch", PatcherController(variables, github, configs))
+		r.Post("/patch", controllers.PushChanges(variables, github, configs))
 
 		r.Post("/preview/update", preview.UpdatePreview(variables))
 	})

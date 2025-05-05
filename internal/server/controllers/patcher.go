@@ -1,10 +1,11 @@
-package server
+package controllers
 
 import (
 	"encoding/json"
 	"net/http"
 	"portal/internal/patcher"
-	"portal/internal/patcher/server/auth"
+	"portal/internal/server/auth"
+	"portal/internal/server/utils"
 	"portal/shared"
 )
 
@@ -14,7 +15,7 @@ type PatcherPayload struct {
 	CommitMessage string            `json:"commitMessage"`
 }
 
-func PatcherController(variables shared.PortalVariables, github GithubStub, configs patcher.PatcherConfigs) func(w http.ResponseWriter, r *http.Request) {
+func PushChanges(variables shared.PortalVariables, github utils.GithubStub, configs utils.PatcherConfigs) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var payload PatcherPayload
 

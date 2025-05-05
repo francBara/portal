@@ -1,10 +1,10 @@
-package patcher
+package utils
 
 import (
 	"errors"
 	"fmt"
 	"log"
-	"portal/internal/patcher/server/auth"
+	"portal/internal/server/auth"
 
 	"github.com/spf13/viper"
 )
@@ -15,6 +15,7 @@ type PatcherConfigs struct {
 	RepoBranch      string `json:"repoBranch"`
 	Pac             string `json:"pac"`
 	OpenPullRequest bool   `json:"openPullRequest"`
+	ServePreview    bool   `json:"servePreview"`
 
 	Users []auth.PortalUser `json:"users"`
 }

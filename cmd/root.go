@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"portal/internal/parser"
-	"portal/internal/patcher/server"
+	"portal/internal/server"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -36,7 +36,7 @@ func init() {
 		Short: "Start patcher Webserver, which serves the dashboard and patches the remote repo",
 		Args:  cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			server.RunPatcher(port, variablesPath)
+			server.RunServer(port, variablesPath)
 		},
 	}
 	patcherCmd.Flags().StringVarP(&variablesPath, "variables", "v", "./variables.json", "The path to the variables configuration file")

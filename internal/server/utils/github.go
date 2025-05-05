@@ -1,10 +1,10 @@
-package server
+package utils
 
 import (
 	"context"
 	"log"
 	"os"
-	"portal/internal/patcher/server/auth"
+	"portal/internal/server/auth"
 	"time"
 
 	"github.com/google/go-github/v71/github"

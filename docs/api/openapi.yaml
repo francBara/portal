@@ -1,0 +1,117 @@
+openapi: 3.0.3
+info:
+  title: Portal Server API
+  version: 1.0.0
+  description: Portal Web API
+
+servers:
+  - url: http://localhost:8080
+
+paths:
+  /signin:
+    post:
+      summary: Sign in
+      description: Authenticates a user with basic authentication.
+      security:
+        - basicAuth: []
+      responses:
+        '200':
+          description: Successfully authenticated
+        '401':
+          description: Unauthorized
+
+  /variables:
+    get:
+      summary: Get variables
+      description: Returns portal configuration variables.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Object representing portal variables
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PortalVariables'
+
+  /patch:
+    post:
+      summary: Push changes
+      description: Applies updates to the remote repository.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Changes pushed successfully
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+
+  /preview/update:
+    post:
+      summary: Update preview
+      description: Updates the live preview content.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PortalVariables'
+      responses:
+        '200':
+          description: Preview updated
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+      
+
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    PortalVariables:
+      type: object
+      properties:
+        string:
+          type: object
+          properties:
+            name:
+              type: string
+            group:
+              type: string
+            value:
+              type: string
+            filePath:
+              type: string
+        number:
+          type: object
+          properties:
+            name:
+              type: string
+            group:
+              type: string
+            value:
+              type: integer
+            max:
+              type: integer
+            min:
+              type: integer
+            step:
+              type: integer
+            filePath:
+              type: string
+            
+        
+
