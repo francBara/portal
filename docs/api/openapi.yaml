@@ -8,7 +8,7 @@ servers:
   - url: http://localhost:8080
 
 paths:
-  /signin:
+  /auth/signin:
     post:
       summary: Sign in
       description: Authenticates a user with basic authentication.

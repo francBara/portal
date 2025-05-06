@@ -25,6 +25,15 @@ type IntVariable struct {
 	Step  int
 }
 
+func (variable IntVariable) update(value string) (IntVariable, error) {
+	parsed, err := strconv.Atoi(value)
+	if err != nil {
+		return variable, errors.New("could not patch variables")
+	}
+	variable.Value = parsed
+	return variable, nil
+}
+
 type FloatVariable struct {
 	PortalVariable
 	Value float32
@@ -33,9 +42,23 @@ type FloatVariable struct {
 	Step  int
 }
 
+func (variable FloatVariable) update(value string) (FloatVariable, error) {
+	parsed, err := strconv.Atoi(value)
+	if err != nil {
+		return variable, errors.New("could not patch variables")
+	}
+	variable.Value = float32(parsed)
+	return variable, nil
+}
+
 type StringVariable struct {
 	PortalVariable
 	Value string
+}
+
+func (variable StringVariable) update(value string) StringVariable {
+	variable.Value = value
+	return variable
 }
 
 type PortalVariables struct {
@@ -60,33 +83,27 @@ func (variables PortalVariables) DumpVariables() {
 }
 
 func (variables PortalVariables) UpdateVariables(variablesPatch map[string]string) (PortalVariables, error) {
-	var err error
-
 	//TODO: Modularize following code with interfaces
 
 	for key, value := range variablesPatch {
 		if _, ok := variables.Integer[key]; ok {
-			currentVar := variables.Integer[key]
-			currentVar.Value, err = strconv.Atoi(value)
+			newVar, err := variables.Integer[key].update(value)
 			if err != nil {
 				return variables, errors.New("could not patch variables")
 			}
-			variables.Integer[key] = currentVar
+			variables.Integer[key] = newVar
 		}
 
 		if _, ok := variables.Float[key]; ok {
-			currentVar := variables.Integer[key]
-			currentVar.Value, err = strconv.Atoi(value)
+			newVar, err := variables.Float[key].update(value)
 			if err != nil {
 				return variables, errors.New("could not patch variables")
 			}
-			variables.Integer[key] = currentVar
+			variables.Float[key] = newVar
 		}
 
 		if _, ok := variables.String[key]; ok {
-			currentVar := variables.String[key]
-			currentVar.Value = value
-			variables.String[key] = currentVar
+			variables.String[key] = variables.String[key].update(value)
 		}
 	}
 

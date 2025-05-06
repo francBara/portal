@@ -29,17 +29,15 @@ func init() {
 	rootCmd.AddCommand(parseCmd)
 
 	var port int
-	var variablesPath string
 
 	var patcherCmd = &cobra.Command{
 		Use:   "patcher [options]",
 		Short: "Start patcher Webserver, which serves the dashboard and patches the remote repo",
 		Args:  cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			server.RunServer(port, variablesPath)
+			server.RunServer(port)
 		},
 	}
-	patcherCmd.Flags().StringVarP(&variablesPath, "variables", "v", "./variables.json", "The path to the variables configuration file")
 	patcherCmd.Flags().IntVarP(&port, "port", "p", 8080, "The port for the webserver")
 
 	patcherCmd.Flags().String("repoOwner", "", "The owner of the Github repo")

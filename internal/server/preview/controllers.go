@@ -3,13 +3,15 @@ package preview
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 	"portal/internal/patcher"
-	"portal/shared"
+	"portal/internal/server/github"
+	"portal/internal/server/utils"
 )
 
-func UpdatePreview(oldVariables shared.PortalVariables) func(w http.ResponseWriter, r *http.Request) {
+func UpdatePreview() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var varsUpdate map[string]string
 
@@ -19,17 +21,17 @@ func UpdatePreview(oldVariables shared.PortalVariables) func(w http.ResponseWrit
 			return
 		}
 
-		newVariables, err := oldVariables.UpdateVariables(varsUpdate)
+		newVariables, err := utils.LoadVariables().UpdateVariables(varsUpdate)
 		if err != nil {
 			panic("error in updating preview variables: " + err.Error())
 		}
 
 		for filePath := range newVariables.FileHashes {
-			globalFilePath := fmt.Sprintf("%s/%s", previewFolderName, filePath)
+			globalFilePath := fmt.Sprintf("%s/%s", github.RepoFolderName, filePath)
 
 			rawFile, err := os.ReadFile(globalFilePath)
 			if err != nil {
-				fmt.Println("Error reading file:", err)
+				slog.Error("Error reading file:", err)
 				return
 			}
 

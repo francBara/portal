@@ -1,51 +1,17 @@
-package utils
+package github
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"log/slog"
 	"os"
+	"os/exec"
 	"portal/internal/server/auth"
 	"time"
 
 	"github.com/google/go-github/v71/github"
-	"golang.org/x/oauth2"
 )
-
-type GithubStub struct {
-	Client     *github.Client
-	RepoName   string
-	RepoBranch string
-	RepoOwner  string
-}
-
-func (stub *GithubStub) Init(repoName string, repoOwner string, repoBranch string, pac string) {
-	stub.RepoName = repoName
-	stub.RepoOwner = repoOwner
-	stub.RepoBranch = repoBranch
-
-	if pac != "" {
-		os.Setenv("PORTAL_GH_TOKEN", pac)
-	}
-
-	stub.getGithubClient()
-}
-
-func (stub *GithubStub) getGithubClient() {
-	ctx := context.Background()
-
-	token := os.Getenv("PORTAL_GH_TOKEN")
-
-	if token == "" {
-		log.Fatalln("PORTAL_GH_TOKEN env variable is not set")
-	}
-
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: token},
-	)
-	tc := oauth2.NewClient(ctx, ts)
-
-	stub.Client = github.NewClient(tc)
-}
 
 func (stub GithubStub) CreateBranch(branchName string) error {
 	ctx := context.Background()
@@ -123,4 +89,39 @@ func (stub GithubStub) CreatePullRequest(fromBranch string, title string, body s
 	if err != nil {
 		log.Fatalf("Error creating PR: %v", err)
 	}
+}
+
+func (stub GithubStub) cloneRepo(pac string) error {
+	info, err := os.Stat(RepoFolderName)
+
+	if err == nil && info.IsDir() {
+		slog.Info("Skipping git clone")
+		return nil
+	}
+
+	slog.Info("Cloning", stub.RepoName, stub.RepoBranch)
+
+	cred := fmt.Sprintf("https://%s:%s@github.com\n", stub.UserName, pac)
+	err = os.WriteFile(os.Getenv("HOME")+"/.git-credentials", []byte(cred), 0600)
+	if err != nil {
+		return err
+	}
+
+	cmd := exec.Command("git", "config", "--global", "credential.helper", "store")
+	err = cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	cmd = exec.Command("git", "clone", "--recurse-submodules", "--branch", stub.RepoBranch, "--single-branch", stub.GetRepoUrl(), RepoFolderName)
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	err = cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

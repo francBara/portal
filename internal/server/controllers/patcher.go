@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"portal/internal/patcher"
 	"portal/internal/server/auth"
+	"portal/internal/server/github"
 	"portal/internal/server/utils"
-	"portal/shared"
 )
 
 type PatcherPayload struct {
@@ -15,9 +15,11 @@ type PatcherPayload struct {
 	CommitMessage string            `json:"commitMessage"`
 }
 
-func PushChanges(variables shared.PortalVariables, github utils.GithubStub, configs utils.PatcherConfigs) func(w http.ResponseWriter, r *http.Request) {
+func PushChanges(configs utils.PatcherConfigs) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var payload PatcherPayload
+
+		github := github.GithubClient
 
 		err := json.NewDecoder(r.Body).Decode(&payload)
 		if err != nil {
@@ -25,7 +27,7 @@ func PushChanges(variables shared.PortalVariables, github utils.GithubStub, conf
 			return
 		}
 
-		newVariables, err := variables.UpdateVariables(payload.Update)
+		newVariables, err := utils.LoadVariables().UpdateVariables(payload.Update)
 		if err != nil {
 			http.Error(w, "Could not update variables", http.StatusBadRequest)
 			return

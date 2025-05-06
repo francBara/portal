@@ -2,63 +2,32 @@ package preview
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"os"
 	"os/exec"
+	"portal/internal/server/github"
 )
 
-const previewFolderName = "app-preview"
-
-func cloneRepo(repoUrl string, branchName string, pac string) {
-	info, err := os.Stat(previewFolderName)
-
-	if err == nil && info.IsDir() {
-		fmt.Println("Skipping git clone")
-		return
-	}
-
-	fmt.Println("Cloning", repoUrl, branchName)
-
-	cred := fmt.Sprintf("https://%s:%s@github.com\n", "francBara", pac)
-	err = os.WriteFile(os.Getenv("HOME")+"/.git-credentials", []byte(cred), 0600)
-	if err != nil {
-		panic("error writing git credentials: " + err.Error())
-	}
-
-	cmd := exec.Command("git", "config", "--global", "credential.helper", "store")
-	err = cmd.Run()
-	if err != nil {
-		panic("error git config credentials: " + err.Error())
-	}
-
-	cmd = exec.Command("git", "clone", "--recurse-submodules", "--branch", branchName, "--single-branch", repoUrl, previewFolderName)
-
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	err = cmd.Run()
-	if err != nil {
-		panic("error cloning repo: " + err.Error())
-	}
-}
-
-func installPackages() {
+func installPackages() error {
 	cmd := exec.Command("npm", "install")
 
-	cmd.Dir = previewFolderName
+	cmd.Dir = github.RepoFolderName
 
 	err := cmd.Run()
 	if err != nil {
-		panic("error cloning repo: " + err.Error())
+		return err
 	}
+
+	return nil
 }
 
 func startDevServer() {
 	cmd := exec.Command("vite", "--port", "3001", "--mode", "test")
 
-	cmd.Dir = previewFolderName
+	cmd.Dir = github.RepoFolderName
 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -70,12 +39,12 @@ func startDevServer() {
 	}
 }
 
-func ServePreview(repoUrl string, branchName string, pac string) *httputil.ReverseProxy {
-	cloneRepo(repoUrl, branchName, pac)
-
-	fmt.Println("Cloned preview repo")
-
-	installPackages()
+func ServePreview() {
+	err := installPackages()
+	if err != nil {
+		slog.Error("npm install", err.Error())
+		return
+	}
 
 	fmt.Println("Installed preview npm packages")
 
@@ -94,11 +63,9 @@ func ServePreview(repoUrl string, branchName string, pac string) *httputil.Rever
 		proxy.ServeHTTP(w, r)
 	})
 
-	fmt.Println("Serving proxy")
+	slog.Info("Preview proxy ready")
 
 	if err := http.ListenAndServe(":3000", nil); err != nil {
-		panic("preview proxy server error: " + err.Error())
+		slog.Error("preview proxy", err.Error())
 	}
-
-	return proxy
 }

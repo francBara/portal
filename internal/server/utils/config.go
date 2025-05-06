@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"portal/internal/server/auth"
 
 	"github.com/spf13/viper"
 )
@@ -16,8 +15,6 @@ type PatcherConfigs struct {
 	Pac             string `json:"pac"`
 	OpenPullRequest bool   `json:"openPullRequest"`
 	ServePreview    bool   `json:"servePreview"`
-
-	Users []auth.PortalUser `json:"users"`
 }
 
 var configFileCandidates = []struct {
