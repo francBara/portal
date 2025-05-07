@@ -21,7 +21,8 @@ type PortalUser struct {
 var jwtSecret = []byte("My secret")
 
 type tokenResponse struct {
-	Token string `json:"token"`
+	User  PortalUser `json:"user"`
+	Token string     `json:"token"`
 }
 
 func Signin() func(w http.ResponseWriter, r *http.Request) {
@@ -32,8 +33,10 @@ func Signin() func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		slog.Info("Login attempt", "email", email)
+
 		if !checkUser(email, password) {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			http.Error(w, "Email or password are not correct", http.StatusUnauthorized)
 			return
 		}
 
@@ -51,8 +54,18 @@ func Signin() func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		user, err := getUser(email)
+		if err != nil {
+			http.Error(w, "Not Found", http.StatusNotFound)
+			return
+		}
+
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(tokenResponse{
+			User: PortalUser{
+				Email: email,
+				Name:  user.Name,
+			},
 			Token: tokenString,
 		})
 

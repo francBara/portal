@@ -2,6 +2,7 @@ package utils
 
 import (
 	"encoding/json"
+	"log/slog"
 	"os"
 	"portal/internal/parser"
 	"portal/internal/server/github"
@@ -16,10 +17,13 @@ func LoadVariables() shared.PortalVariables {
 	}
 
 	if github.GithubClient != nil {
+		slog.Info("Parsing project")
 		vars, err := parser.ParseProject(github.RepoFolderName, parser.ParseOptions{})
 		if err != nil {
 			panic(err)
 		}
+		slog.Info("Parsed project", "variables", vars.Length())
+
 		variables = &vars
 	} else {
 		file, err := os.Open("variables.json")

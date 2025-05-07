@@ -83,8 +83,6 @@ func (variables PortalVariables) DumpVariables() {
 }
 
 func (variables PortalVariables) UpdateVariables(variablesPatch map[string]string) (PortalVariables, error) {
-	//TODO: Modularize following code with interfaces
-
 	for key, value := range variablesPatch {
 		if _, ok := variables.Integer[key]; ok {
 			newVar, err := variables.Integer[key].update(value)
@@ -140,4 +138,8 @@ func (variables PortalVariables) HasFileChanged(fileContent string, filePath str
 	hashString := hex.EncodeToString(hasher.Sum(nil))
 
 	return hashString != variables.FileHashes[filePath]
+}
+
+func (variables PortalVariables) Length() int {
+	return len(variables.Integer) + len(variables.Float) + len(variables.String)
 }

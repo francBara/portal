@@ -21,11 +21,12 @@ var GithubClient *GithubStub
 
 const RepoFolderName = "app-preview"
 
-func Init(repoName string, repoOwner string, repoBranch string, pac string) error {
+func Init(repoName string, repoOwner string, userName string, repoBranch string, pac string) error {
 	var githubClient GithubStub
 
 	githubClient.RepoName = repoName
 	githubClient.RepoOwner = repoOwner
+	githubClient.UserName = userName
 	githubClient.RepoBranch = repoBranch
 
 	if pac != "" {

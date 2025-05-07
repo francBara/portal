@@ -5,6 +5,8 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
+	"os"
+	"path/filepath"
 	"portal/internal/server/auth"
 	"portal/internal/server/controllers"
 	"portal/internal/server/github"
@@ -21,9 +23,9 @@ func RunServer(port int) {
 		log.Fatalln("Could not load config file")
 	}
 
-	err = github.Init(configs.RepoName, configs.RepoOwner, configs.RepoBranch, configs.Pac)
+	err = github.Init(configs.RepoName, configs.RepoOwner, configs.UserName, configs.RepoBranch, configs.Pac)
 	if err != nil {
-		slog.Error("Error initializing github client", err.Error())
+		slog.Error("Error initializing github client", "error", err.Error())
 	}
 
 	if github.GithubClient != nil && configs.ServePreview {
@@ -32,21 +34,34 @@ func RunServer(port int) {
 
 	r := chi.NewRouter()
 
-	// Handles basic authentication
-	r.Post("/auth/signin", auth.Signin())
+	r.Route("/api", func(api chi.Router) {
+		// Handles basic authentication
+		api.Post("/auth/signin", auth.Signin())
 
-	// Protected routes
-	r.Group(func(r chi.Router) {
-		r.Use(auth.AuthenticateUser())
+		// Papiotected routes
+		api.Group(func(secureApi chi.Router) {
+			secureApi.Use(auth.AuthenticateUser())
 
-		// Gets the current variables
-		r.Get("/variables", controllers.GetVariables())
+			// Gets the current variables
+			secureApi.Get("/variables", controllers.GetVariables())
 
-		// Applies the update to the remote repo
-		r.Post("/patch", controllers.PushChanges(configs))
+			// Applies the update to the remote repo
+			secureApi.Post("/patch", controllers.PushChanges(configs))
 
-		// Updates the preview with new variables
-		r.Post("/preview/update", preview.UpdatePreview())
+			// Updates the preview with new variables
+			secureApi.Post("/preview/update", preview.UpdatePreview())
+		})
+	})
+
+	r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
+		fs := http.StripPrefix("/", http.FileServer(http.Dir("static")))
+		path := filepath.Join("static", r.URL.Path)
+		_, err := os.Stat(path)
+		if os.IsNotExist(err) {
+			http.ServeFile(w, r, "static/index.html")
+			return
+		}
+		fs.ServeHTTP(w, r)
 	})
 
 	log.Printf("Starting server on http://localhost:%d...", port)

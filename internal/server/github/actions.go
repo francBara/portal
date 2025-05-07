@@ -99,7 +99,7 @@ func (stub GithubStub) cloneRepo(pac string) error {
 		return nil
 	}
 
-	slog.Info("Cloning", stub.RepoName, stub.RepoBranch)
+	slog.Info("Cloning", "repo", stub.RepoName, "user", stub.UserName)
 
 	cred := fmt.Sprintf("https://%s:%s@github.com\n", stub.UserName, pac)
 	err = os.WriteFile(os.Getenv("HOME")+"/.git-credentials", []byte(cred), 0600)

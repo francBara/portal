@@ -10,6 +10,7 @@ import (
 
 type PatcherConfigs struct {
 	RepoOwner       string `json:"repoOwner"`
+	UserName        string `json:"userName"`
 	RepoName        string `json:"repoName"`
 	RepoBranch      string `json:"repoBranch"`
 	Pac             string `json:"pac"`
@@ -48,6 +49,10 @@ func LoadConfigs() (PatcherConfigs, error) {
 			err := viper.Unmarshal(&config)
 			if err != nil {
 				log.Fatalf("unable to decode into struct, %v", err)
+			}
+
+			if config.RepoOwner == "" {
+				config.RepoOwner = config.UserName
 			}
 
 			return config, nil
