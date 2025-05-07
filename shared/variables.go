@@ -11,18 +11,18 @@ import (
 )
 
 type PortalVariable struct {
-	Name        string
-	DisplayName string
-	Group       string
-	FilePath    string
+	Name        string `json:"name"`
+	DisplayName string `json:"displayName"`
+	Group       string `json:"group"`
+	FilePath    string `json:"filePath"`
 }
 
 type IntVariable struct {
 	PortalVariable
-	Value int
-	Max   int
-	Min   int
-	Step  int
+	Value int `json:"value"`
+	Max   int `json:"max"`
+	Min   int `json:"min"`
+	Step  int `json:"step"`
 }
 
 func (variable IntVariable) update(value string) (IntVariable, error) {
@@ -36,10 +36,10 @@ func (variable IntVariable) update(value string) (IntVariable, error) {
 
 type FloatVariable struct {
 	PortalVariable
-	Value float32
-	Max   int
-	Min   int
-	Step  int
+	Value float32 `json:"value"`
+	Max   int     `json:"max"`
+	Min   int     `json:"min"`
+	Step  int     `json:"step"`
 }
 
 func (variable FloatVariable) update(value string) (FloatVariable, error) {
@@ -53,7 +53,7 @@ func (variable FloatVariable) update(value string) (FloatVariable, error) {
 
 type StringVariable struct {
 	PortalVariable
-	Value string
+	Value string `json:"value"`
 }
 
 func (variable StringVariable) update(value string) StringVariable {
@@ -62,10 +62,10 @@ func (variable StringVariable) update(value string) StringVariable {
 }
 
 type PortalVariables struct {
-	Integer    map[string]IntVariable
-	Float      map[string]FloatVariable
-	String     map[string]StringVariable
-	FileHashes map[string]string
+	Integer    map[string]IntVariable    `json:"integer"`
+	Float      map[string]FloatVariable  `json:"float"`
+	String     map[string]StringVariable `json:"string"`
+	FileHashes map[string]string         `json:"fileHashes"`
 }
 
 func (variables PortalVariables) DumpVariables() {
@@ -142,4 +142,54 @@ func (variables PortalVariables) HasFileChanged(fileContent string, filePath str
 
 func (variables PortalVariables) Length() int {
 	return len(variables.Integer) + len(variables.Float) + len(variables.String)
+}
+
+type VariablesMap map[string]map[string]any
+
+func (varsMap *VariablesMap) add(group string, name string, value any) {
+	if _, ok := (*varsMap)[group]; !ok {
+		(*varsMap)[group] = make(map[string]any)
+	}
+
+	(*varsMap)[group][name] = value
+}
+
+// Converts PortalVariables struct to a hash map containing groups as keys, variable names as subkeys and variables as values
+func (variables PortalVariables) ToMap() VariablesMap {
+	mappedVariables := make(VariablesMap)
+
+	for _, intVar := range variables.Integer {
+		mappedVariables.add(intVar.Group, intVar.Name, map[string]any{
+			"displayName": intVar.DisplayName,
+			"value":       intVar.Value,
+			"max":         intVar.Max,
+			"min":         intVar.Min,
+			"step":        intVar.Step,
+			"filePath":    intVar.FilePath,
+			"type":        "integer",
+		})
+	}
+
+	for _, floatVar := range variables.Float {
+		mappedVariables.add(floatVar.Group, floatVar.Name, map[string]any{
+			"displayName": floatVar.DisplayName,
+			"value":       floatVar.Value,
+			"max":         floatVar.Max,
+			"min":         floatVar.Min,
+			"step":        floatVar.Step,
+			"filePath":    floatVar.FilePath,
+			"type":        "float",
+		})
+	}
+
+	for _, stringVar := range variables.String {
+		mappedVariables.add(stringVar.Group, stringVar.Name, map[string]any{
+			"displayName": stringVar.DisplayName,
+			"value":       stringVar.Value,
+			"filePath":    stringVar.FilePath,
+			"type":        "string",
+		})
+	}
+
+	return mappedVariables
 }
