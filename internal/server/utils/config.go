@@ -22,11 +22,9 @@ var configFileCandidates = []struct {
 	Name string
 	Type string
 }{
-	{"patcher_config", "json"},
-	{"patcher_config", "yaml"},
 	{"config", "json"},
 	{"config", "yaml"},
-	{"app", "toml"},
+	{"config", "toml"},
 }
 
 func LoadConfigs() (PatcherConfigs, error) {

@@ -6,6 +6,8 @@ toolchain go1.23.8
 
 require golang.org/x/oauth2 v0.29.0
 
+require github.com/go-chi/cors v1.2.1 // indirect
+
 require (
 	github.com/evanw/esbuild v0.25.2
 	github.com/fsnotify/fsnotify v1.8.0 // indirect

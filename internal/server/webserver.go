@@ -15,6 +15,7 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/cors"
 )
 
 func RunServer(port int) {
@@ -35,6 +36,15 @@ func RunServer(port int) {
 	r := chi.NewRouter()
 
 	r.Route("/api", func(api chi.Router) {
+		api.Use(cors.Handler(cors.Options{
+			AllowedOrigins:   []string{"http://localhost:5173"},
+			AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+			AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
+			ExposedHeaders:   []string{"Link"},
+			AllowCredentials: false,
+			MaxAge:           300,
+		}))
+
 		// Handles basic authentication
 		api.Post("/auth/signin", auth.Signin())
 
