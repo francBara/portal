@@ -9,11 +9,12 @@ import (
 	"portal/internal/patcher"
 	"portal/internal/server/github"
 	"portal/internal/server/utils"
+	"portal/shared"
 )
 
 func UpdatePreview() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var varsUpdate map[string]string
+		var varsUpdate shared.VariablesMap
 
 		err := json.NewDecoder(r.Body).Decode(&varsUpdate)
 		if err != nil {
@@ -49,7 +50,18 @@ func UpdatePreview() func(w http.ResponseWriter, r *http.Request) {
 				panic(err)
 			}
 		}
+	}
+}
 
-		w.WriteHeader(http.StatusOK)
+type previewStatus struct {
+	IsPreviewAvailable bool `json:"isPreviewAvailable"`
+}
+
+func GetPreviewStatus(isPreviewAvailable bool) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(previewStatus{
+			IsPreviewAvailable: isPreviewAvailable,
+		})
 	}
 }

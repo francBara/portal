@@ -82,26 +82,43 @@ func (variables PortalVariables) DumpVariables() {
 	}
 }
 
-func (variables PortalVariables) UpdateVariables(variablesPatch map[string]string) (PortalVariables, error) {
-	for key, value := range variablesPatch {
-		if _, ok := variables.Integer[key]; ok {
-			newVar, err := variables.Integer[key].update(value)
-			if err != nil {
-				return variables, errors.New("could not patch variables")
-			}
-			variables.Integer[key] = newVar
-		}
+func (variables PortalVariables) UpdateVariables(varsMap VariablesMap) (PortalVariables, error) {
+	for _, groups := range varsMap {
+		for _, groupVars := range groups {
+			for varName, variable := range groupVars {
+				if _, ok := variables.Integer[varName]; ok {
+					value := variable["value"].(int)
+					if !ok {
+						return PortalVariables{}, errors.New("value is not int")
+					}
 
-		if _, ok := variables.Float[key]; ok {
-			newVar, err := variables.Float[key].update(value)
-			if err != nil {
-				return variables, errors.New("could not patch variables")
-			}
-			variables.Float[key] = newVar
-		}
+					currVar := variables.Integer[varName]
+					currVar.Value = value
+					variables.Integer[varName] = currVar
+				}
 
-		if _, ok := variables.String[key]; ok {
-			variables.String[key] = variables.String[key].update(value)
+				if _, ok := variables.Float[varName]; ok {
+					value := variable["value"].(float32)
+					if !ok {
+						return PortalVariables{}, errors.New("value is not float32")
+					}
+
+					currVar := variables.Float[varName]
+					currVar.Value = value
+					variables.Float[varName] = currVar
+				}
+
+				if _, ok := variables.String[varName]; ok {
+					value := variable["value"].(string)
+					if !ok {
+						return PortalVariables{}, errors.New("value is not string")
+					}
+
+					currVar := variables.String[varName]
+					currVar.Value = value
+					variables.String[varName] = currVar
+				}
+			}
 		}
 	}
 
@@ -144,14 +161,14 @@ func (variables PortalVariables) Length() int {
 	return len(variables.Integer) + len(variables.Float) + len(variables.String)
 }
 
-type VariablesMap map[string]map[string]map[string]any
+type VariablesMap map[string]map[string]map[string]map[string]any
 
-func (varsMap *VariablesMap) add(variable PortalVariable, value any) {
+func (varsMap *VariablesMap) add(variable PortalVariable, value map[string]any) {
 	if _, ok := (*varsMap)[variable.FilePath]; !ok {
-		(*varsMap)[variable.FilePath] = make(map[string]map[string]any)
+		(*varsMap)[variable.FilePath] = make(map[string]map[string]map[string]any)
 	}
 	if _, ok := (*varsMap)[variable.FilePath][variable.Group]; !ok {
-		(*varsMap)[variable.FilePath][variable.Group] = make(map[string]any)
+		(*varsMap)[variable.FilePath][variable.Group] = make(map[string]map[string]any)
 	}
 
 	(*varsMap)[variable.FilePath][variable.Group][variable.Name] = value

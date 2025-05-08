@@ -7,12 +7,13 @@ import (
 	"portal/internal/server/auth"
 	"portal/internal/server/github"
 	"portal/internal/server/utils"
+	"portal/shared"
 )
 
 type PatcherPayload struct {
-	Update        map[string]string `json:"update"`
-	BranchName    string            `json:"branchName"`
-	CommitMessage string            `json:"commitMessage"`
+	Update        shared.VariablesMap `json:"update"`
+	BranchName    string              `json:"branchName"`
+	CommitMessage string              `json:"commitMessage"`
 }
 
 func PushChanges(configs utils.PatcherConfigs) func(w http.ResponseWriter, r *http.Request) {
