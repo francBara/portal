@@ -48,6 +48,7 @@ func TestJavascript(t *testing.T) {
 				PortalVariable: shared.PortalVariable{
 					Name:        "a",
 					DisplayName: "a",
+					View:        "simple_javascript.js",
 					FilePath:    "simple_javascript.js",
 					Group:       "gruppaccio",
 				},
@@ -62,6 +63,7 @@ func TestJavascript(t *testing.T) {
 				PortalVariable: shared.PortalVariable{
 					Name:        "b",
 					DisplayName: "ecco il bel nome",
+					View:        "simple_javascript.js",
 					FilePath:    "simple_javascript.js",
 					Group:       "altro",
 				},
@@ -71,6 +73,7 @@ func TestJavascript(t *testing.T) {
 				PortalVariable: shared.PortalVariable{
 					Name:        "c",
 					DisplayName: "nome",
+					View:        "simple_javascript.js",
 					FilePath:    "simple_javascript.js",
 					Group:       "Default",
 				},

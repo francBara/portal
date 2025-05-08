@@ -15,6 +15,7 @@ func TestVariables(t *testing.T) {
 					Group:       "gruppettino",
 					DisplayName: "numerino",
 					FilePath:    "index.js",
+					View:        "index",
 				},
 				Max:   100,
 				Min:   0,
@@ -28,6 +29,7 @@ func TestVariables(t *testing.T) {
 					Group:       "gruppettino",
 					DisplayName: "testino",
 					FilePath:    "index.js",
+					View:        "index",
 				},
 				Value: "contenuto",
 			},
@@ -35,10 +37,11 @@ func TestVariables(t *testing.T) {
 	}
 
 	expected := VariablesMap{
-		"index.js": {
+		"index": {
 			"gruppettino": {
 				"numero": map[string]any{
 					"displayName": "numerino",
+					"filePath":    "index.js",
 					"max":         100,
 					"min":         0,
 					"step":        0,
@@ -47,6 +50,7 @@ func TestVariables(t *testing.T) {
 				},
 				"testo": map[string]any{
 					"displayName": "testino",
+					"filePath":    "index.js",
 					"value":       "contenuto",
 					"type":        "string",
 				},

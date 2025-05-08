@@ -7,12 +7,12 @@ import (
 	"errors"
 	"maps"
 	"os"
-	"strconv"
 )
 
 type PortalVariable struct {
 	Name        string `json:"name"`
 	DisplayName string `json:"displayName"`
+	View        string `json:"view"`
 	Group       string `json:"group"`
 	FilePath    string `json:"filePath"`
 }
@@ -25,15 +25,6 @@ type IntVariable struct {
 	Step  int `json:"step"`
 }
 
-func (variable IntVariable) update(value string) (IntVariable, error) {
-	parsed, err := strconv.Atoi(value)
-	if err != nil {
-		return variable, errors.New("could not patch variables")
-	}
-	variable.Value = parsed
-	return variable, nil
-}
-
 type FloatVariable struct {
 	PortalVariable
 	Value float32 `json:"value"`
@@ -42,23 +33,9 @@ type FloatVariable struct {
 	Step  int     `json:"step"`
 }
 
-func (variable FloatVariable) update(value string) (FloatVariable, error) {
-	parsed, err := strconv.Atoi(value)
-	if err != nil {
-		return variable, errors.New("could not patch variables")
-	}
-	variable.Value = float32(parsed)
-	return variable, nil
-}
-
 type StringVariable struct {
 	PortalVariable
 	Value string `json:"value"`
-}
-
-func (variable StringVariable) update(value string) StringVariable {
-	variable.Value = value
-	return variable
 }
 
 type PortalVariables struct {
@@ -77,7 +54,7 @@ func (variables PortalVariables) DumpVariables() {
 
 	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "  ")
-	if err := encoder.Encode(variables); err != nil {
+	if err := encoder.Encode(variables.ToMap()); err != nil {
 		panic(err)
 	}
 }
@@ -164,14 +141,14 @@ func (variables PortalVariables) Length() int {
 type VariablesMap map[string]map[string]map[string]map[string]any
 
 func (varsMap *VariablesMap) add(variable PortalVariable, value map[string]any) {
-	if _, ok := (*varsMap)[variable.FilePath]; !ok {
-		(*varsMap)[variable.FilePath] = make(map[string]map[string]map[string]any)
+	if _, ok := (*varsMap)[variable.View]; !ok {
+		(*varsMap)[variable.View] = make(map[string]map[string]map[string]any)
 	}
-	if _, ok := (*varsMap)[variable.FilePath][variable.Group]; !ok {
-		(*varsMap)[variable.FilePath][variable.Group] = make(map[string]map[string]any)
+	if _, ok := (*varsMap)[variable.View][variable.Group]; !ok {
+		(*varsMap)[variable.View][variable.Group] = make(map[string]map[string]any)
 	}
 
-	(*varsMap)[variable.FilePath][variable.Group][variable.Name] = value
+	(*varsMap)[variable.View][variable.Group][variable.Name] = value
 }
 
 // Converts PortalVariables struct to a hash map containing variables as final values and keys hierarchy: file -> group -> variable name
@@ -181,6 +158,7 @@ func (variables PortalVariables) ToMap() VariablesMap {
 	for _, intVar := range variables.Integer {
 		mappedVariables.add(intVar.PortalVariable, map[string]any{
 			"displayName": intVar.DisplayName,
+			"filePath":    intVar.FilePath,
 			"value":       intVar.Value,
 			"max":         intVar.Max,
 			"min":         intVar.Min,
@@ -192,6 +170,7 @@ func (variables PortalVariables) ToMap() VariablesMap {
 	for _, floatVar := range variables.Float {
 		mappedVariables.add(floatVar.PortalVariable, map[string]any{
 			"displayName": floatVar.DisplayName,
+			"filePath":    floatVar.FilePath,
 			"value":       floatVar.Value,
 			"max":         floatVar.Max,
 			"min":         floatVar.Min,
@@ -203,6 +182,7 @@ func (variables PortalVariables) ToMap() VariablesMap {
 	for _, stringVar := range variables.String {
 		mappedVariables.add(stringVar.PortalVariable, map[string]any{
 			"displayName": stringVar.DisplayName,
+			"filePath":    stringVar.FilePath,
 			"value":       stringVar.Value,
 			"type":        "string",
 		})

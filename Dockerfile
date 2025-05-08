@@ -18,7 +18,7 @@ RUN npm install -g vite
 RUN apk add --no-cache git
 
 COPY --from=builder /app/portal .
-COPY --from=builder /app/patcher_config.json .
+COPY --from=builder /app/config.json .
 COPY --from=builder /app/variables.json .
 COPY --from=builder /app/static static
 
