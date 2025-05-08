@@ -11,16 +11,16 @@ import (
 
 var variables *shared.PortalVariables
 
-func LoadVariables() shared.PortalVariables {
+func LoadVariables() (shared.PortalVariables, error) {
 	if variables != nil {
-		return *variables
+		return *variables, nil
 	}
 
 	if github.GithubClient != nil {
 		slog.Info("Parsing project")
 		vars, err := parser.ParseProject(github.RepoFolderName, parser.ParseOptions{})
 		if err != nil {
-			panic(err)
+			return shared.PortalVariables{}, err
 		}
 		slog.Info("Parsed project", "variables", vars.Length())
 
@@ -28,15 +28,15 @@ func LoadVariables() shared.PortalVariables {
 	} else {
 		file, err := os.Open("variables.json")
 		if err != nil {
-			panic(err)
+			return shared.PortalVariables{}, err
 		}
 
 		decoder := json.NewDecoder(file)
 		if err := decoder.Decode(variables); err != nil {
-			panic(err)
+			return shared.PortalVariables{}, err
 		}
 		file.Close()
 	}
 
-	return *variables
+	return *variables, nil
 }

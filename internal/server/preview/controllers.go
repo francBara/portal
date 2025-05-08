@@ -21,9 +21,16 @@ func UpdatePreview() func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		newVariables, err := utils.LoadVariables().UpdateVariables(varsUpdate)
+		variables, err := utils.LoadVariables()
 		if err != nil {
-			panic("error in updating preview variables: " + err.Error())
+			http.Error(w, "Could not load variables", http.StatusInternalServerError)
+			return
+		}
+
+		newVariables, err := variables.UpdateVariables(varsUpdate)
+		if err != nil {
+			http.Error(w, "Could not update variables", http.StatusInternalServerError)
+			return
 		}
 
 		for filePath := range newVariables.FileHashes {
@@ -31,7 +38,7 @@ func UpdatePreview() func(w http.ResponseWriter, r *http.Request) {
 
 			rawFile, err := os.ReadFile(globalFilePath)
 			if err != nil {
-				slog.Error("Error reading file:", err)
+				slog.Error("Error reading file:", "error", err)
 				return
 			}
 

@@ -24,6 +24,8 @@ func RunServer(port int) {
 		log.Fatalln("Could not load config file")
 	}
 
+	configs.Print()
+
 	err = github.Init(configs.RepoName, configs.RepoOwner, configs.UserName, configs.RepoBranch, configs.Pac)
 	if err != nil {
 		slog.Error("Error initializing github client", "error", err.Error())
@@ -48,7 +50,7 @@ func RunServer(port int) {
 		// Handles basic authentication
 		api.Post("/auth/signin", auth.Signin())
 
-		// Papiotected routes
+		// Protected routes
 		api.Group(func(secureApi chi.Router) {
 			secureApi.Use(auth.AuthenticateUser())
 

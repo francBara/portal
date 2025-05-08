@@ -27,7 +27,13 @@ func PushChanges(configs utils.PatcherConfigs) func(w http.ResponseWriter, r *ht
 			return
 		}
 
-		newVariables, err := utils.LoadVariables().UpdateVariables(payload.Update)
+		variables, err := utils.LoadVariables()
+		if err != nil {
+			http.Error(w, "Could not load variables", http.StatusInternalServerError)
+			return
+		}
+
+		newVariables, err := variables.UpdateVariables(payload.Update)
 		if err != nil {
 			http.Error(w, "Could not update variables", http.StatusBadRequest)
 			return

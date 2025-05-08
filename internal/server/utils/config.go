@@ -1,9 +1,11 @@
 package utils
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
+	"log/slog"
 
 	"github.com/spf13/viper"
 )
@@ -18,6 +20,16 @@ type PatcherConfigs struct {
 	ServePreview    bool   `json:"servePreview"`
 }
 
+func (config PatcherConfigs) Print() {
+	jsonConfigs, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		slog.Error("Could not print config")
+		return
+	}
+
+	fmt.Println(string(jsonConfigs))
+}
+
 var configFileCandidates = []struct {
 	Name string
 	Type string
@@ -29,10 +41,13 @@ var configFileCandidates = []struct {
 
 func LoadConfigs() (PatcherConfigs, error) {
 	viper.AutomaticEnv()
+	viper.SetEnvPrefix("portal")
+
 	viper.AddConfigPath(".")
 
 	viper.SetDefault("repoBranch", "main")
 	viper.SetDefault("openPullRequest", true)
+	viper.SetDefault("servePreview", true)
 
 	var config PatcherConfigs
 

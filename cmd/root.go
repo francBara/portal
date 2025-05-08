@@ -43,10 +43,12 @@ func init() {
 	patcherCmd.Flags().String("repoOwner", "", "The owner of the Github repo")
 	patcherCmd.Flags().String("repoName", "", "The name of the Github repo")
 	patcherCmd.Flags().String("pac", "", "Your Github account personal access token")
+	patcherCmd.Flags().Bool("preview", true, "Serve a live preview of your repo, requires Github integration")
 
 	viper.BindPFlag("repoOwner", patcherCmd.Flags().Lookup("repoOwner"))
 	viper.BindPFlag("repoName", patcherCmd.Flags().Lookup("repoName"))
 	viper.BindPFlag("pac", patcherCmd.Flags().Lookup("pac"))
+	viper.BindPFlag("servePreview", patcherCmd.Flags().Lookup("preview"))
 
 	rootCmd.AddCommand(patcherCmd)
 }
