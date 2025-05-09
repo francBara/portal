@@ -35,9 +35,18 @@ func (args portalArguments) getString(key string) string {
 }
 
 func parseAnnotationArguments(arguments string) portalArguments {
-	matches := shared.AnnotationArgsRegex.FindAllStringSubmatch(arguments, -1)
-
 	mappedArguments := make(map[string]string)
+
+	// Positional arguments
+	splitArguments := strings.Fields(arguments)
+	for _, arg := range splitArguments {
+		if arg == "all" {
+			mappedArguments["all"] = "true"
+		}
+	}
+
+	// Named arguments
+	matches := shared.AnnotationArgsRegex.FindAllStringSubmatch(arguments, -1)
 
 	for _, m := range matches {
 		mappedArguments[m[1]] = strings.Trim(m[2], "\"")

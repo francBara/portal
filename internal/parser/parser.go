@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"portal/shared"
@@ -71,12 +72,15 @@ func parseFile(basePath string, filePath string, options ParseOptions) (shared.P
 
 	var variables shared.PortalVariables
 
-	variables.FileHashes = make(map[string]string)
+	variables.Init()
 	variables.FileHashes[filePath] = getFileHash(file)
 
-	variables.Integer = make(map[string]shared.IntVariable)
-	variables.Float = make(map[string]shared.FloatVariable)
-	variables.String = make(map[string]shared.StringVariable)
+	scanAll := false
+	defaultArguments := portalArguments{
+		"group": "Default",
+	}
+
+	var currentArguments portalArguments
 
 	scanner := bufio.NewScanner(file)
 
@@ -85,19 +89,29 @@ func parseFile(basePath string, filePath string, options ParseOptions) (shared.P
 	for scanner.Scan() {
 		line := scanner.Text()
 
-		if matches := shared.AnnotationRegex.FindStringSubmatch(line); matches != nil {
-			arguments := parseAnnotationArguments(matches[1])
+		if annotationMatches := shared.AnnotationRegex.FindStringSubmatch(line); annotationMatches != nil {
+			currentArguments = parseAnnotationArguments(annotationMatches[1])
 
 			if options.Verbose {
 				fmt.Printf("Annotation: %s\n", line)
 			}
 
-			scanner.Scan()
-			line = scanner.Text()
+			// The "all" positional argument implies scanning of all subsequent variables
+			if currentArguments.getString("all") != "" {
+				scanAll = true
+				defaultArguments = currentArguments
+			}
+			continue
+		}
 
-			if matches := shared.VariableRegex.FindStringSubmatch(line); matches != nil {
-				varName := matches[2]
-				value := matches[3]
+		if scanAll {
+			currentArguments = defaultArguments
+		}
+
+		if currentArguments != nil {
+			if varMatches := shared.VariableRegex.FindStringSubmatch(line); varMatches != nil {
+				varName := varMatches[2]
+				value := varMatches[3]
 
 				value = strings.Trim(value, ";")
 
@@ -108,20 +122,24 @@ func parseFile(basePath string, filePath string, options ParseOptions) (shared.P
 				varType := GetVariableType(value)
 
 				if varType == "integer" {
-					variables.Integer[varName], err = numberVariableFactory(varName, value, filePath, arguments)
+					variables.Integer[varName], err = numberVariableFactory(varName, value, filePath, currentArguments)
 					if err != nil {
 						return shared.PortalVariables{}, err
 					}
 				} else if varType == "float" {
-					variables.Float[varName], err = floatVariableFactory(varName, value, filePath, arguments)
+					variables.Float[varName], err = floatVariableFactory(varName, value, filePath, currentArguments)
 					if err != nil {
 						return shared.PortalVariables{}, err
 					}
 				} else if varType == "string" {
-					variables.String[varName] = stringVariableFactory(varName, value, filePath, arguments)
+					variables.String[varName] = stringVariableFactory(varName, value, filePath, currentArguments)
 				}
 			} else if shared.TailwindRegex.MatchString(line) {
 				varName, value := ParseTailwindLine(line)
+
+				if options.Verbose {
+					slog.Info(fmt.Sprintf("parsed tailwind line %s", line))
+				}
 
 				_, ok := variables.Integer[varName]
 
@@ -129,11 +147,12 @@ func parseFile(basePath string, filePath string, options ParseOptions) (shared.P
 					varName += shared.GetRandomString(4)
 				}
 
-				variables.Integer[varName], err = numberVariableFactory(varName, value, filePath, arguments)
+				variables.Integer[varName], err = numberVariableFactory(varName, value, filePath, currentArguments)
 				if err != nil {
 					return shared.PortalVariables{}, err
 				}
 			}
+			currentArguments = nil
 		}
 	}
 

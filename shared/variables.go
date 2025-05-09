@@ -46,6 +46,15 @@ type PortalVariables struct {
 	FileHashes map[string]string         `json:"fileHashes"`
 }
 
+func (variables *PortalVariables) Init() {
+	variables.FileHashes = make(map[string]string)
+
+	variables.Integer = make(map[string]IntVariable)
+	variables.Float = make(map[string]FloatVariable)
+
+	variables.String = make(map[string]StringVariable)
+}
+
 func (variables PortalVariables) DumpVariables() {
 	file, err := os.Create("variables.json")
 	if err != nil {

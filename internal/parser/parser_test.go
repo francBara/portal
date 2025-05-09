@@ -30,7 +30,7 @@ func TestSubfolders(t *testing.T) {
 }
 
 func TestJavascript(t *testing.T) {
-	variables, err := parseFile("tests", "simple_javascript.js", ParseOptions{Verbose: false})
+	variables, err := parseFile("tests", "simple_javascript.js", ParseOptions{})
 	if err != nil {
 		t.Errorf("error parsing project: " + err.Error())
 	}
@@ -90,8 +90,33 @@ func TestJavascript(t *testing.T) {
 	}
 }
 
+func TestJavascriptAll(t *testing.T) {
+	variables, err := parseFile("tests", "simple_javascript_all.js", ParseOptions{})
+	if err != nil {
+		t.Errorf("error parsing project: " + err.Error())
+	}
+
+	if variables.Length() != 3 {
+		t.Errorf("Wrong number of variables %d, expected 3", variables.Length())
+	}
+
+	if _, ok := variables.Integer["d"]; !ok {
+		t.Error("int variable d not present")
+	}
+	if _, ok := variables.String["b"]; !ok {
+		t.Error("string variable b not present")
+	}
+	if _, ok := variables.String["c"]; !ok {
+		t.Error("string variable c not present")
+	}
+
+	if variables.Integer["d"].Value != 24 {
+		t.Errorf("int variable d wrong value %d", variables.Integer["d"].Value)
+	}
+}
+
 func TestTailwind(t *testing.T) {
-	variables, err := parseFile("tests", "tailwind.js", ParseOptions{Verbose: false})
+	variables, err := parseFile("tests", "tailwind.js", ParseOptions{Verbose: true})
 	if err != nil {
 		t.Errorf("error parsing project: " + err.Error())
 	}
