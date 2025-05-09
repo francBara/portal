@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"maps"
 	"os"
 )
@@ -64,9 +65,9 @@ func (variables PortalVariables) UpdateVariables(varsMap VariablesMap) (PortalVa
 		for _, groupVars := range groups {
 			for varName, variable := range groupVars {
 				if _, ok := variables.Integer[varName]; ok {
-					value := variable["value"].(int)
+					value, ok := variable["value"].(int)
 					if !ok {
-						return PortalVariables{}, errors.New("value is not int")
+						return PortalVariables{}, fmt.Errorf("variable %s is not int: %v %T", varName, variable["value"], variable["value"])
 					}
 
 					currVar := variables.Integer[varName]
@@ -75,7 +76,7 @@ func (variables PortalVariables) UpdateVariables(varsMap VariablesMap) (PortalVa
 				}
 
 				if _, ok := variables.Float[varName]; ok {
-					value := variable["value"].(float32)
+					value, ok := variable["value"].(float32)
 					if !ok {
 						return PortalVariables{}, errors.New("value is not float32")
 					}
@@ -86,7 +87,7 @@ func (variables PortalVariables) UpdateVariables(varsMap VariablesMap) (PortalVa
 				}
 
 				if _, ok := variables.String[varName]; ok {
-					value := variable["value"].(string)
+					value, ok := variable["value"].(string)
 					if !ok {
 						return PortalVariables{}, errors.New("value is not string")
 					}
@@ -136,57 +137,4 @@ func (variables PortalVariables) HasFileChanged(fileContent string, filePath str
 
 func (variables PortalVariables) Length() int {
 	return len(variables.Integer) + len(variables.Float) + len(variables.String)
-}
-
-type VariablesMap map[string]map[string]map[string]map[string]any
-
-func (varsMap *VariablesMap) add(variable PortalVariable, value map[string]any) {
-	if _, ok := (*varsMap)[variable.View]; !ok {
-		(*varsMap)[variable.View] = make(map[string]map[string]map[string]any)
-	}
-	if _, ok := (*varsMap)[variable.View][variable.Group]; !ok {
-		(*varsMap)[variable.View][variable.Group] = make(map[string]map[string]any)
-	}
-
-	(*varsMap)[variable.View][variable.Group][variable.Name] = value
-}
-
-// Converts PortalVariables struct to a hash map containing variables as final values and keys hierarchy: file -> group -> variable name
-func (variables PortalVariables) ToMap() VariablesMap {
-	mappedVariables := make(VariablesMap)
-
-	for _, intVar := range variables.Integer {
-		mappedVariables.add(intVar.PortalVariable, map[string]any{
-			"displayName": intVar.DisplayName,
-			"filePath":    intVar.FilePath,
-			"value":       intVar.Value,
-			"max":         intVar.Max,
-			"min":         intVar.Min,
-			"step":        intVar.Step,
-			"type":        "integer",
-		})
-	}
-
-	for _, floatVar := range variables.Float {
-		mappedVariables.add(floatVar.PortalVariable, map[string]any{
-			"displayName": floatVar.DisplayName,
-			"filePath":    floatVar.FilePath,
-			"value":       floatVar.Value,
-			"max":         floatVar.Max,
-			"min":         floatVar.Min,
-			"step":        floatVar.Step,
-			"type":        "float",
-		})
-	}
-
-	for _, stringVar := range variables.String {
-		mappedVariables.add(stringVar.PortalVariable, map[string]any{
-			"displayName": stringVar.DisplayName,
-			"filePath":    stringVar.FilePath,
-			"value":       stringVar.Value,
-			"type":        "string",
-		})
-	}
-
-	return mappedVariables
 }

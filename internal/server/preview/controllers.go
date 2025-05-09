@@ -14,9 +14,7 @@ import (
 
 func UpdatePreview() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var varsUpdate shared.VariablesMap
-
-		err := json.NewDecoder(r.Body).Decode(&varsUpdate)
+		varsUpdate, err := shared.JsonToVariablesMap(r.Body)
 		if err != nil {
 			http.Error(w, "Invalid JSON", http.StatusBadRequest)
 			return
@@ -30,6 +28,7 @@ func UpdatePreview() func(w http.ResponseWriter, r *http.Request) {
 
 		newVariables, err := variables.UpdateVariables(varsUpdate)
 		if err != nil {
+			slog.Error(err.Error())
 			http.Error(w, "Could not update variables", http.StatusInternalServerError)
 			return
 		}
