@@ -39,10 +39,40 @@ type StringVariable struct {
 	Value string `json:"value"`
 }
 
+type UINode struct {
+	Type       string `json:"type"`
+	Properties []struct {
+		Prefix string `json:"prefix"`
+		Value  string `json:"value"`
+	} `json:"properties"`
+	Children []*UINode `json:"children"`
+}
+
+func (node UINode) ToMap() map[string]any {
+	data, err := json.Marshal(node)
+	if err != nil {
+		panic(err)
+	}
+
+	var result map[string]any
+
+	err = json.Unmarshal(data, &result)
+	if err != nil {
+		panic(err)
+	}
+	return result
+}
+
+type UIRoot struct {
+	PortalVariable
+	UINode
+}
+
 type PortalVariables struct {
 	Integer    map[string]IntVariable    `json:"integer"`
 	Float      map[string]FloatVariable  `json:"float"`
 	String     map[string]StringVariable `json:"string"`
+	UI         map[string]UIRoot         `json:"ui"`
 	FileHashes map[string]string         `json:"fileHashes"`
 }
 
@@ -53,6 +83,8 @@ func (variables *PortalVariables) Init() {
 	variables.Float = make(map[string]FloatVariable)
 
 	variables.String = make(map[string]StringVariable)
+
+	variables.UI = make(map[string]UIRoot)
 }
 
 func (variables PortalVariables) DumpVariables() {
@@ -131,6 +163,8 @@ func (variables PortalVariables) Merge(newVariables PortalVariables) PortalVaria
 	merged.Integer = mergeMaps(variables.Integer, newVariables.Integer)
 	merged.Float = mergeMaps(variables.Float, newVariables.Float)
 	merged.String = mergeMaps(variables.String, newVariables.String)
+	merged.UI = mergeMaps(variables.UI, newVariables.UI)
+
 	merged.FileHashes = mergeMaps(variables.FileHashes, newVariables.FileHashes)
 
 	return merged

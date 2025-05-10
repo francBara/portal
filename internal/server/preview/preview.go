@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"portal/internal/server/github"
+	"portal/internal/server/utils"
 )
 
 func installPackages() error {
@@ -40,9 +41,20 @@ func startDevServer() {
 }
 
 func ServePreview() {
-	err := installPackages()
+	variables, err := utils.LoadVariables()
 	if err != nil {
-		slog.Error("npm install", err.Error())
+		slog.Error(err.Error())
+		return
+	}
+
+	for _, ui := range variables.UI {
+		generatePreview(fmt.Sprintf("%s/%s", github.RepoFolderName, ui.FilePath))
+		slog.Info("generated preview", "file", ui.FilePath)
+	}
+
+	err = installPackages()
+	if err != nil {
+		slog.Error("npm install", "error", err.Error())
 		return
 	}
 
@@ -66,6 +78,6 @@ func ServePreview() {
 	slog.Info("Preview proxy ready")
 
 	if err := http.ListenAndServe(":3000", nil); err != nil {
-		slog.Error("preview proxy", err.Error())
+		slog.Error("preview proxy", "error", err.Error())
 	}
 }

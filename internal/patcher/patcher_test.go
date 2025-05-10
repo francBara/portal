@@ -1,6 +1,8 @@
 package patcher
 
 import (
+	"os"
+	"portal/internal/parser"
 	"portal/shared"
 	"strings"
 	"testing"
@@ -35,7 +37,12 @@ let asd = "asdf";
 		},
 	}
 
-	newContent := strings.Split(PatchFile(content, newVariables), "\n")
+	patched, err := PatchFile(content, newVariables)
+	if err != nil {
+		t.Error("Error patching file", err.Error())
+	}
+
+	newContent := strings.Split(patched, "\n")
 
 	if newContent[3] != "const b = 100;" {
 		t.Errorf("Wrong patched line %s", newContent[3])
@@ -72,7 +79,12 @@ duration-[1000ms]
 		},
 	}
 
-	newContent := strings.Split(PatchFile(content, newVariables), "\n")
+	patched, err := PatchFile(content, newVariables)
+	if err != nil {
+		t.Error("Error patching file", err.Error())
+	}
+
+	newContent := strings.Split(patched, "\n")
 
 	if newContent[2] != "border-round-100" {
 		t.Errorf("Wrong patched line %s", newContent[2])
@@ -80,5 +92,45 @@ duration-[1000ms]
 
 	if newContent[5] != "duration-[247ms]" {
 		t.Errorf("Wrong patched line %s", newContent[5])
+	}
+}
+
+func TestUiPatcher(t *testing.T) {
+	if err := os.Chdir("../.."); err != nil {
+		panic(err)
+	}
+
+	variables, err := parser.ParseFile("internal/parser/tests", "ui.jsx", parser.ParseOptions{})
+	if err != nil {
+		panic(err)
+	}
+
+	fileContent, err := os.ReadFile("internal/parser/tests/ui.jsx")
+	if err != nil {
+		panic(err)
+	}
+
+	content := string(fileContent)
+
+	variables.UI["CardLanding"].Children[0].Children[1].Properties[0] = struct {
+		Prefix string "json:\"prefix\""
+		Value  string "json:\"value\""
+	}{
+		Prefix: "cursor",
+		Value:  "puntatore",
+	}
+
+	patched, err := PatchFile(content, variables)
+	if err != nil {
+		panic(err)
+	}
+
+	if !strings.Contains(patched, "className=\"cursor-puntatore px-5 pb-5\"") {
+		t.Error("bad patch")
+	}
+
+	os.WriteFile("output.jsx", []byte(patched), 0644)
+	if err != nil {
+		panic(err)
 	}
 }

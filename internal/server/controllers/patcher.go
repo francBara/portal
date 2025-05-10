@@ -58,7 +58,10 @@ func PushChanges(configs utils.PatcherConfigs) func(w http.ResponseWriter, r *ht
 		for filePath := range newVariables.FileHashes {
 			fileContent, fileSha := github.GetRepoFile(filePath)
 
-			newContent := patcher.PatchFile(fileContent, newVariables)
+			newContent, err := patcher.PatchFile(fileContent, newVariables)
+			if err != nil {
+				http.Error(w, "Could not patch file", http.StatusInternalServerError)
+			}
 
 			github.UpdateFile(newContent, filePath, fileSha, updateBranch, "Eccoci qua", *user)
 		}

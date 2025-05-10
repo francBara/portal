@@ -42,7 +42,11 @@ func UpdatePreview() func(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			newContent := patcher.PatchFile(string(rawFile), newVariables)
+			newContent, err := patcher.PatchFile(string(rawFile), newVariables)
+			if err != nil {
+				http.Error(w, "Could not patch file", http.StatusInternalServerError)
+				return
+			}
 
 			err = os.WriteFile(globalFilePath, []byte(newContent), 0644)
 			if err != nil {

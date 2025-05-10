@@ -44,7 +44,7 @@ func ParseProject(rootPath string, options ParseOptions) (shared.PortalVariables
 				fmt.Printf("Visiting %s\n", path)
 			}
 
-			currentVariables, err := parseFile(rootPath, strings.TrimPrefix(path, strings.Trim(rootPath, "./")), options)
+			currentVariables, err := ParseFile(rootPath, strings.TrimPrefix(path, strings.Trim(rootPath, "./")), options)
 			if err != nil {
 				return err
 			}
@@ -63,10 +63,10 @@ func ParseProject(rootPath string, options ParseOptions) (shared.PortalVariables
 	return variables, nil
 }
 
-func parseFile(basePath string, filePath string, options ParseOptions) (shared.PortalVariables, error) {
+func ParseFile(basePath string, filePath string, options ParseOptions) (shared.PortalVariables, error) {
 	file, err := os.Open(fmt.Sprintf("%s/%s", basePath, filePath))
 	if err != nil {
-		panic(err)
+		return shared.PortalVariables{}, err
 	}
 	defer file.Close()
 
@@ -94,6 +94,15 @@ func parseFile(basePath string, filePath string, options ParseOptions) (shared.P
 
 			if options.Verbose {
 				fmt.Printf("Annotation: %s\n", line)
+			}
+
+			if currentArguments.getString("ui") != "" {
+				variables.UI, err = uiVariablesFactory(basePath, filePath, currentArguments)
+				if err != nil {
+					return shared.PortalVariables{}, err
+				}
+
+				slog.Info("parsed UI root", "basePath", basePath, "filePath", filePath)
 			}
 
 			// The "all" positional argument implies scanning of all subsequent variables

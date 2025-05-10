@@ -30,7 +30,7 @@ func TestSubfolders(t *testing.T) {
 }
 
 func TestJavascript(t *testing.T) {
-	variables, err := parseFile("tests", "simple_javascript.js", ParseOptions{})
+	variables, err := ParseFile("tests", "simple_javascript.js", ParseOptions{})
 	if err != nil {
 		t.Errorf("error parsing project: " + err.Error())
 	}
@@ -91,7 +91,7 @@ func TestJavascript(t *testing.T) {
 }
 
 func TestJavascriptAll(t *testing.T) {
-	variables, err := parseFile("tests", "simple_javascript_all.js", ParseOptions{})
+	variables, err := ParseFile("tests", "simple_javascript_all.js", ParseOptions{Verbose: true})
 	if err != nil {
 		t.Errorf("error parsing project: " + err.Error())
 	}
@@ -116,7 +116,7 @@ func TestJavascriptAll(t *testing.T) {
 }
 
 func TestTailwind(t *testing.T) {
-	variables, err := parseFile("tests", "tailwind.js", ParseOptions{Verbose: true})
+	variables, err := ParseFile("tests", "tailwind.js", ParseOptions{Verbose: true})
 	if err != nil {
 		t.Errorf("error parsing project: " + err.Error())
 	}
@@ -131,5 +131,42 @@ func TestTailwind(t *testing.T) {
 
 	if variables.Integer["bg-color-red"].Value != 500 {
 		t.Errorf("bad bg-color value %d", variables.Integer["bg-color-red"].Value)
+	}
+}
+
+func TestUI(t *testing.T) {
+	if err := os.Chdir("../.."); err != nil {
+		panic(err)
+	}
+
+	variables, err := ParseFile("internal/parser/tests", "ui.jsx", ParseOptions{Verbose: true})
+	if err != nil {
+		t.Errorf("error parsing project: " + err.Error())
+	}
+
+	if _, ok := variables.UI["CardLanding"]; !ok {
+		t.Error("CardLanding not present")
+	}
+
+	if variables.UI["CardLanding"].Type != "div" {
+		t.Error("Bad html type")
+	}
+
+	expected := map[string]string{
+		"m":           "2",
+		"w":           "56",
+		"rounded":     "lg",
+		"border-gray": "200",
+		"bg":          "white",
+	}
+
+	for _, p := range variables.UI["CardLanding"].Children[0].Properties {
+		if v, ok := expected[p.Prefix]; ok && v == p.Value {
+			delete(expected, p.Prefix)
+		}
+	}
+
+	if len(expected) > 0 {
+		t.Error("Bad properties")
 	}
 }

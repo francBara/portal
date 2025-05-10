@@ -13,7 +13,12 @@ func getIndentation(line string) string {
 	return regexp.MustCompile(`^\s+`).FindString(line)
 }
 
-func PatchFile(content string, newVariables shared.PortalVariables) string {
+func PatchFile(content string, newVariables shared.PortalVariables) (string, error) {
+	content, err := patchUI(content, newVariables.UI)
+	if err != nil {
+		return "", err
+	}
+
 	scanner := bufio.NewScanner(strings.NewReader(content))
 
 	var newContent []string
@@ -90,5 +95,5 @@ func PatchFile(content string, newVariables shared.PortalVariables) string {
 		}
 	}
 
-	return strings.Join(newContent, "\n")
+	return strings.Join(newContent, "\n"), nil
 }

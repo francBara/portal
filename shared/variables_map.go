@@ -55,6 +55,10 @@ func (variables PortalVariables) ToMap() VariablesMap {
 		})
 	}
 
+	for _, uiVar := range variables.UI {
+		mappedVariables.add(uiVar.PortalVariable, uiVar.UINode.ToMap())
+	}
+
 	return mappedVariables
 }
 

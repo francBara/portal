@@ -1,6 +1,11 @@
 package parser
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"os"
+	"os/exec"
 	"portal/shared"
 	"regexp"
 	"strconv"
@@ -42,6 +47,8 @@ func parseAnnotationArguments(arguments string) portalArguments {
 	for _, arg := range splitArguments {
 		if arg == "all" {
 			mappedArguments["all"] = "true"
+		} else if arg == "ui" {
+			mappedArguments["ui"] = "true"
 		}
 	}
 
@@ -151,4 +158,33 @@ func stringVariableFactory(name string, value string, filePath string, options p
 		PortalVariable: options.getPortalVariable(name, filePath),
 		Value:          value,
 	}
+}
+
+func uiVariablesFactory(basePath string, filePath string, options portalArguments) (map[string]shared.UIRoot, error) {
+	cmd := exec.Command("node", "tools/generateTree.js", fmt.Sprintf("%s/%s", basePath, filePath))
+
+	var out bytes.Buffer
+
+	cmd.Stdout = &out
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
+
+	err := cmd.Run()
+	if err != nil {
+		return nil, err
+	}
+
+	var roots map[string]shared.UIRoot
+
+	if err := json.Unmarshal(out.Bytes(), &roots); err != nil {
+		fmt.Println("JSON parse error:", err)
+		return nil, err
+	}
+
+	for rootName, root := range roots {
+		root.PortalVariable = options.getPortalVariable(rootName, filePath)
+		roots[rootName] = root
+	}
+
+	return roots, nil
 }

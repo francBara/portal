@@ -6,7 +6,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestVariables(t *testing.T) {
+func TestVariablesMap(t *testing.T) {
 	variables := PortalVariables{
 		Integer: map[string]IntVariable{
 			"numero": {
