@@ -39,6 +39,7 @@ func (args portalArguments) getString(key string) string {
 	return ""
 }
 
+// parseAnnotationArguments parses a @portal annotation optional arguments, returning the corresponding struct.
 func parseAnnotationArguments(arguments string) portalArguments {
 	mappedArguments := make(map[string]string)
 
@@ -62,6 +63,7 @@ func parseAnnotationArguments(arguments string) portalArguments {
 	return mappedArguments
 }
 
+// GetVariableType returns the variable type basing on how its value is defined.
 func GetVariableType(value string) string {
 	if value[0] == '"' && value[len(value)-1] == '"' || value[0] == '\'' && value[len(value)-1] == '\'' {
 		return "string"
@@ -87,6 +89,7 @@ func ParseTailwindLine(line string) (string, string) {
 	return varName, value
 }
 
+// getPortalVariable generates PortalVariable base data basing on arguments, name and filePath.
 func (arguments portalArguments) getPortalVariable(name string, filePath string) shared.PortalVariable {
 	group := arguments.getString("group")
 	if group == "" {
@@ -160,6 +163,7 @@ func stringVariableFactory(name string, value string, filePath string, options p
 	}
 }
 
+// uiVariablesFactory uses generateTree.js tool to get a tree representation of the html tree.
 func uiVariablesFactory(basePath string, filePath string, options portalArguments) (map[string]shared.UIRoot, error) {
 	cmd := exec.Command("node", "tools/generateTree.js", fmt.Sprintf("%s/%s", basePath, filePath))
 
@@ -181,6 +185,7 @@ func uiVariablesFactory(basePath string, filePath string, options portalArgument
 		return nil, err
 	}
 
+	// PortalVariable data is added after tree generation basing on arguments
 	for rootName, root := range roots {
 		root.PortalVariable = options.getPortalVariable(rootName, filePath)
 		roots[rootName] = root

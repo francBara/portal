@@ -10,6 +10,7 @@ import (
 	"os"
 )
 
+// PortalVariable retains common variables data.
 type PortalVariable struct {
 	Name        string `json:"name"`
 	DisplayName string `json:"displayName"`
@@ -39,6 +40,7 @@ type StringVariable struct {
 	Value string `json:"value"`
 }
 
+// UINode is a tree representing an html tree, retaining tailwind properties.
 type UINode struct {
 	Type       string `json:"type"`
 	Properties []struct {
@@ -68,6 +70,7 @@ type UIRoot struct {
 	UINode
 }
 
+// PortalVariables retains all annotated variables in a project, along with view, group and files data.
 type PortalVariables struct {
 	Integer    map[string]IntVariable    `json:"integer"`
 	Float      map[string]FloatVariable  `json:"float"`
@@ -76,6 +79,7 @@ type PortalVariables struct {
 	FileHashes map[string]string         `json:"fileHashes"`
 }
 
+// Init allocates PortalVariables inner maps.
 func (variables *PortalVariables) Init() {
 	variables.FileHashes = make(map[string]string)
 
@@ -101,6 +105,7 @@ func (variables PortalVariables) DumpVariables() {
 	}
 }
 
+// UpdateVariables returns new PortalVariables with values updated by varsMap.
 func (variables PortalVariables) UpdateVariables(varsMap VariablesMap) (PortalVariables, error) {
 	for _, groups := range varsMap {
 		for _, groupVars := range groups {
@@ -144,6 +149,7 @@ func (variables PortalVariables) UpdateVariables(varsMap VariablesMap) (PortalVa
 	return variables, nil
 }
 
+// HasVariables returns true if PortalVariables is not empty.
 func (variables PortalVariables) HasVariables() bool {
 	return len(variables.Integer) > 0 || len(variables.String) > 0 || len(variables.Float) > 0
 }
@@ -157,6 +163,7 @@ func mergeMaps[K comparable, v any](map1 map[K]v, map2 map[K]v) map[K]v {
 	return newMap
 }
 
+// Merge merges two PortalVariables instances into a single one.
 func (variables PortalVariables) Merge(newVariables PortalVariables) PortalVariables {
 	var merged PortalVariables
 
@@ -178,6 +185,7 @@ func (variables PortalVariables) HasFileChanged(fileContent string, filePath str
 	return hashString != variables.FileHashes[filePath]
 }
 
+// Length returns the total number of variables in PortalVariables.
 func (variables PortalVariables) Length() int {
-	return len(variables.Integer) + len(variables.Float) + len(variables.String)
+	return len(variables.Integer) + len(variables.Float) + len(variables.String) + len(variables.UI)
 }

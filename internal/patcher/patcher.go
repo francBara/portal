@@ -1,3 +1,4 @@
+// Package patcher provides functions to apply portal changes to code.
 package patcher
 
 import (
@@ -13,8 +14,9 @@ func getIndentation(line string) string {
 	return regexp.MustCompile(`^\s+`).FindString(line)
 }
 
-func PatchFile(content string, newVariables shared.PortalVariables) (string, error) {
-	content, err := patchUI(content, newVariables.UI)
+// PatchFile returns a modified copy of content, where its annotated variables are updated with newVariables values.
+func PatchFile(content string, newVariables shared.PortalVariables) (patchedContent string, err error) {
+	content, err = patchUI(content, newVariables.UI)
 	if err != nil {
 		return "", err
 	}

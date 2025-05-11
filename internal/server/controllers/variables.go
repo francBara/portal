@@ -7,6 +7,7 @@ import (
 	"portal/internal/server/utils"
 )
 
+// GetVariables returns the current variables in the server state.
 func GetVariables() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		variables, err := utils.LoadVariables()

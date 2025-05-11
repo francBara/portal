@@ -18,7 +18,7 @@ func (varsMap *VariablesMap) add(variable PortalVariable, value map[string]any) 
 	(*varsMap)[variable.View][variable.Group][variable.Name] = value
 }
 
-// Converts PortalVariables struct to a hash map containing variables as final values and keys hierarchy: file -> group -> variable name
+// ToMap converts PortalVariables struct to a hash map containing variables as final values and keys hierarchy: file -> group -> variable name.
 func (variables PortalVariables) ToMap() VariablesMap {
 	mappedVariables := make(VariablesMap)
 
@@ -62,6 +62,7 @@ func (variables PortalVariables) ToMap() VariablesMap {
 	return mappedVariables
 }
 
+// JsonToVariablesMap takes a raw json and outputs a VariablesMap representation.
 func JsonToVariablesMap(varsJson io.Reader) (VariablesMap, error) {
 	var variablesMap *VariablesMap
 

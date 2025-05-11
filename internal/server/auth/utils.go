@@ -27,7 +27,7 @@ func getUsers() []PortalUser {
 	return users
 }
 
-func checkUser(email string, password string) bool {
+func checkUser(email string, password string) (loginSuccessful bool) {
 	for _, user := range getUsers() {
 		if user.Email == email && user.PasswordHash == hashPassword(password) {
 			return true

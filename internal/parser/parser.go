@@ -19,6 +19,7 @@ type ParseOptions struct {
 
 var acceptedExtensions = [4]string{".js", ".ts", ".jsx", ".tsx"}
 
+// ParseProject crawls a directory and parses all files looking for @portal annotations.
 func ParseProject(rootPath string, options ParseOptions) (shared.PortalVariables, error) {
 	var variables shared.PortalVariables
 
@@ -44,6 +45,7 @@ func ParseProject(rootPath string, options ParseOptions) (shared.PortalVariables
 				fmt.Printf("Visiting %s\n", path)
 			}
 
+			// Parses the current file and merges it with the total variables
 			currentVariables, err := ParseFile(rootPath, strings.TrimPrefix(path, strings.Trim(rootPath, "./")), options)
 			if err != nil {
 				return err
@@ -63,6 +65,7 @@ func ParseProject(rootPath string, options ParseOptions) (shared.PortalVariables
 	return variables, nil
 }
 
+// ParseFile takes in a file path and outputs the PortalVariables relative to all the file @portal annotations.
 func ParseFile(basePath string, filePath string, options ParseOptions) (shared.PortalVariables, error) {
 	file, err := os.Open(fmt.Sprintf("%s/%s", basePath, filePath))
 	if err != nil {
@@ -89,6 +92,7 @@ func ParseFile(basePath string, filePath string, options ParseOptions) (shared.P
 	for scanner.Scan() {
 		line := scanner.Text()
 
+		// Annotation match
 		if annotationMatches := shared.AnnotationRegex.FindStringSubmatch(line); annotationMatches != nil {
 			currentArguments = parseAnnotationArguments(annotationMatches[1])
 
@@ -96,6 +100,7 @@ func ParseFile(basePath string, filePath string, options ParseOptions) (shared.P
 				fmt.Printf("Annotation: %s\n", line)
 			}
 
+			// The "ui" positional argument implies autoscanning of all html trees in the file
 			if currentArguments.getString("ui") != "" {
 				variables.UI, err = uiVariablesFactory(basePath, filePath, currentArguments)
 				if err != nil {
@@ -105,7 +110,7 @@ func ParseFile(basePath string, filePath string, options ParseOptions) (shared.P
 				slog.Info("parsed UI root", "basePath", basePath, "filePath", filePath)
 			}
 
-			// The "all" positional argument implies scanning of all subsequent variables
+			// The "all" positional argument implies scanning of all subsequent variables, its arguments are applied globally
 			if currentArguments.getString("all") != "" {
 				scanAll = true
 				defaultArguments = currentArguments
@@ -118,6 +123,7 @@ func ParseFile(basePath string, filePath string, options ParseOptions) (shared.P
 		}
 
 		if currentArguments != nil {
+			// Variable declaration match. Name, type and value are parsed and added to file PortalVariables
 			if varMatches := shared.VariableRegex.FindStringSubmatch(line); varMatches != nil {
 				varName := varMatches[2]
 				value := varMatches[3]

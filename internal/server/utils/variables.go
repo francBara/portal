@@ -11,6 +11,7 @@ import (
 
 var variables *shared.PortalVariables
 
+// LoadVariables loads and caches variables. If Github is set, variables are parsed in real time, otherwise are loaded from variables.json.
 func LoadVariables() (shared.PortalVariables, error) {
 	if variables != nil {
 		return *variables, nil

@@ -25,6 +25,7 @@ type tokenResponse struct {
 	Token string     `json:"token"`
 }
 
+// Signin accepts Basic authentication header and returns a JWT id token.
 func Signin() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		email, password, err := decodeBasicAuth(r.Header.Get("Authorization"))
@@ -73,6 +74,7 @@ func Signin() func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// AuthenticateUser is a middleware that verifies Bearer token authorization to protect API routes.
 func AuthenticateUser() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
