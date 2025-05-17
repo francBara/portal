@@ -1,7 +1,6 @@
 package preview
 
 import (
-	"fmt"
 	"log/slog"
 	"net/http"
 	"net/http/httputil"
@@ -9,9 +8,9 @@ import (
 	"os"
 	"os/exec"
 	"portal/internal/server/github"
-	"portal/internal/server/utils"
 )
 
+// installPackages calls "npm install" on the cloned repo.
 func installPackages() error {
 	cmd := exec.Command("npm", "install")
 
@@ -25,6 +24,7 @@ func installPackages() error {
 	return nil
 }
 
+// startDevServer calls vite on the cloned repo, serving a development server.
 func startDevServer() {
 	cmd := exec.Command("vite", "--port", "3001", "--mode", "test")
 
@@ -40,26 +40,16 @@ func startDevServer() {
 	}
 }
 
+// ServePreview sets up the repo for a local dev server, starts the dev server and proxies it.
 func ServePreview() {
-	variables, err := utils.LoadVariables()
-	if err != nil {
-		slog.Error(err.Error())
-		return
-	}
-
-	for _, ui := range variables.UI {
-		generatePreview(fmt.Sprintf("%s/%s", github.RepoFolderName, ui.FilePath))
-		slog.Info("generated preview", "file", ui.FilePath)
-	}
-
-	err = installPackages()
+	slog.Info("executing npm install...")
+	err := installPackages()
 	if err != nil {
 		slog.Error("npm install", "error", err.Error())
 		return
 	}
 
-	fmt.Println("Installed preview npm packages")
-
+	slog.Info("starting vite dev server...")
 	go startDevServer()
 
 	target, _ := url.Parse("http://localhost:3001")

@@ -32,6 +32,7 @@ func RunServer(port int) {
 	}
 
 	if github.GithubClient != nil && configs.ServePreview {
+		//go build.TotalBuild()
 		go preview.ServePreview()
 	}
 
@@ -66,6 +67,24 @@ func RunServer(port int) {
 			secureApi.Post("/preview/update", preview.UpdatePreview())
 		})
 	})
+
+	// r.Get("/preview", func(w http.ResponseWriter, r *http.Request) {
+	// 	http.Redirect(w, r, "/preview/", http.StatusMovedPermanently)
+	// })
+
+	// r.Get("/preview/*", func(w http.ResponseWriter, r *http.Request) {
+	// 	previewFolder := fmt.Sprintf("%s/%s", github.RepoFolderName, build.BuildFolder)
+
+	// 	fs := http.StripPrefix("/preview/", http.FileServer(http.Dir(previewFolder)))
+	// 	relPath := strings.TrimPrefix(r.URL.Path, "/preview/")
+	// 	path := filepath.Join(previewFolder, relPath)
+	// 	_, err := os.Stat(path)
+	// 	if os.IsNotExist(err) {
+	// 		http.ServeFile(w, r, fmt.Sprintf("%s/index.html", previewFolder))
+	// 		return
+	// 	}
+	// 	fs.ServeHTTP(w, r)
+	// })
 
 	r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
 		fs := http.StripPrefix("/", http.FileServer(http.Dir("static")))
