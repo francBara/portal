@@ -2,3 +2,4 @@ variables.json
 config.json
 users.json
 app-preview
+node_modules
