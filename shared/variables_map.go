@@ -7,7 +7,7 @@ import (
 
 type VariablesMap map[string]map[string]map[string]map[string]any
 
-func (varsMap *VariablesMap) add(variable PortalVariable, value map[string]any) {
+func (varsMap *VariablesMap) add(variable PortalVariable, filePath string, value map[string]any) {
 	if _, ok := (*varsMap)[variable.View]; !ok {
 		(*varsMap)[variable.View] = make(map[string]map[string]map[string]any)
 	}
@@ -16,7 +16,7 @@ func (varsMap *VariablesMap) add(variable PortalVariable, value map[string]any) 
 	}
 
 	value["displayName"] = variable.DisplayName
-	value["filePath"] = variable.FilePath
+	value["filePath"] = filePath
 	(*varsMap)[variable.View][variable.Group][variable.Name] = value
 
 }
@@ -25,35 +25,37 @@ func (varsMap *VariablesMap) add(variable PortalVariable, value map[string]any) 
 func (variables PortalVariables) ToMap() VariablesMap {
 	mappedVariables := make(VariablesMap)
 
-	for _, intVar := range variables.Integer {
-		mappedVariables.add(intVar.PortalVariable, map[string]any{
-			"value": intVar.Value,
-			"max":   intVar.Max,
-			"min":   intVar.Min,
-			"step":  intVar.Step,
-			"type":  "integer",
-		})
-	}
+	for filePath, fileVars := range variables {
+		for _, intVar := range fileVars.Integer {
+			mappedVariables.add(intVar.PortalVariable, filePath, map[string]any{
+				"value": intVar.Value,
+				"max":   intVar.Max,
+				"min":   intVar.Min,
+				"step":  intVar.Step,
+				"type":  "integer",
+			})
+		}
 
-	for _, floatVar := range variables.Float {
-		mappedVariables.add(floatVar.PortalVariable, map[string]any{
-			"value": floatVar.Value,
-			"max":   floatVar.Max,
-			"min":   floatVar.Min,
-			"step":  floatVar.Step,
-			"type":  "float",
-		})
-	}
+		for _, floatVar := range fileVars.Float {
+			mappedVariables.add(floatVar.PortalVariable, filePath, map[string]any{
+				"value": floatVar.Value,
+				"max":   floatVar.Max,
+				"min":   floatVar.Min,
+				"step":  floatVar.Step,
+				"type":  "float",
+			})
+		}
 
-	for _, stringVar := range variables.String {
-		mappedVariables.add(stringVar.PortalVariable, map[string]any{
-			"value": stringVar.Value,
-			"type":  "string",
-		})
-	}
+		for _, stringVar := range fileVars.String {
+			mappedVariables.add(stringVar.PortalVariable, filePath, map[string]any{
+				"value": stringVar.Value,
+				"type":  "string",
+			})
+		}
 
-	for _, uiVar := range variables.UI {
-		mappedVariables.add(uiVar.PortalVariable, uiVar.UINode.ToMap())
+		for _, uiVar := range fileVars.UI {
+			mappedVariables.add(uiVar.PortalVariable, filePath, uiVar.UINode.ToMap())
+		}
 	}
 
 	return mappedVariables

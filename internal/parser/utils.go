@@ -112,7 +112,6 @@ func (arguments portalArguments) getPortalVariable(name string, filePath string)
 		DisplayName: displayName,
 		View:        view,
 		Group:       group,
-		FilePath:    filePath,
 	}
 }
 
@@ -164,7 +163,7 @@ func stringVariableFactory(name string, value string, filePath string, options p
 }
 
 // uiVariablesFactory uses generateTree.js tool to get a tree representation of the html tree.
-func uiVariablesFactory(basePath string, filePath string, options portalArguments) (map[string]shared.UIRoot, error) {
+func uiVariablesFactory(basePath string, filePath string, options portalArguments) (map[string]shared.UIVariable, error) {
 	cmd := exec.Command("node", "tools/generateTree.js", fmt.Sprintf("%s/%s", basePath, filePath))
 
 	var out bytes.Buffer
@@ -178,7 +177,7 @@ func uiVariablesFactory(basePath string, filePath string, options portalArgument
 		return nil, err
 	}
 
-	var roots map[string]shared.UIRoot
+	var roots map[string]shared.UIVariable
 
 	if err := json.Unmarshal(out.Bytes(), &roots); err != nil {
 		fmt.Println("JSON parse error:", err)

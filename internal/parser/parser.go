@@ -2,8 +2,6 @@ package parser
 
 import (
 	"bufio"
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"log/slog"
@@ -21,9 +19,12 @@ var acceptedExtensions = [4]string{".js", ".ts", ".jsx", ".tsx"}
 
 // ParseProject crawls a directory and parses all files looking for @portal annotations.
 func ParseProject(rootPath string, options ParseOptions) (shared.PortalVariables, error) {
-	var variables shared.PortalVariables
+	variables := make(map[string]shared.FileVariables)
 
 	err := filepath.Walk(rootPath, func(path string, info os.FileInfo, err error) error {
+		//TODO: Improve rootPath and path parsing
+		relativePath := strings.Trim(strings.TrimPrefix(path, strings.Trim(rootPath, "./")), "/")
+
 		if err != nil {
 			fmt.Printf("Error walking the path %v: %v\n", path, err)
 			return err
@@ -46,13 +47,13 @@ func ParseProject(rootPath string, options ParseOptions) (shared.PortalVariables
 			}
 
 			// Parses the current file and merges it with the total variables
-			currentVariables, err := ParseFile(rootPath, strings.TrimPrefix(path, strings.Trim(rootPath, "./")), options)
+			currentVariables, err := ParseFile(rootPath, relativePath, options)
 			if err != nil {
 				return err
 			}
 
-			if currentVariables.HasVariables() {
-				variables = variables.Merge(currentVariables)
+			if currentVariables.Length() > 0 {
+				variables[relativePath] = currentVariables
 			}
 		}
 
@@ -65,18 +66,17 @@ func ParseProject(rootPath string, options ParseOptions) (shared.PortalVariables
 	return variables, nil
 }
 
-// ParseFile takes in a file path and outputs the PortalVariables relative to all the file @portal annotations.
-func ParseFile(basePath string, filePath string, options ParseOptions) (shared.PortalVariables, error) {
+// ParseFile takes in a file path and outputs the FileVariables relative to all the file @portal annotations.
+func ParseFile(basePath string, filePath string, options ParseOptions) (shared.FileVariables, error) {
 	file, err := os.Open(fmt.Sprintf("%s/%s", basePath, filePath))
 	if err != nil {
-		return shared.PortalVariables{}, err
+		return shared.FileVariables{}, err
 	}
 	defer file.Close()
 
-	var variables shared.PortalVariables
+	var variables shared.FileVariables
 
 	variables.Init()
-	variables.FileHashes[filePath] = getFileHash(file)
 
 	scanAll := false
 	defaultArguments := portalArguments{
@@ -104,7 +104,7 @@ func ParseFile(basePath string, filePath string, options ParseOptions) (shared.P
 			if currentArguments.getString("ui") != "" {
 				variables.UI, err = uiVariablesFactory(basePath, filePath, currentArguments)
 				if err != nil {
-					return shared.PortalVariables{}, err
+					return shared.FileVariables{}, err
 				}
 
 				slog.Info("parsed UI root", "basePath", basePath, "filePath", filePath)
@@ -139,12 +139,12 @@ func ParseFile(basePath string, filePath string, options ParseOptions) (shared.P
 				if varType == "integer" {
 					variables.Integer[varName], err = numberVariableFactory(varName, value, filePath, currentArguments)
 					if err != nil {
-						return shared.PortalVariables{}, err
+						return shared.FileVariables{}, err
 					}
 				} else if varType == "float" {
 					variables.Float[varName], err = floatVariableFactory(varName, value, filePath, currentArguments)
 					if err != nil {
-						return shared.PortalVariables{}, err
+						return shared.FileVariables{}, err
 					}
 				} else if varType == "string" {
 					variables.String[varName] = stringVariableFactory(varName, value, filePath, currentArguments)
@@ -164,7 +164,7 @@ func ParseFile(basePath string, filePath string, options ParseOptions) (shared.P
 
 				variables.Integer[varName], err = numberVariableFactory(varName, value, filePath, currentArguments)
 				if err != nil {
-					return shared.PortalVariables{}, err
+					return shared.FileVariables{}, err
 				}
 			}
 			currentArguments = nil
@@ -172,14 +172,4 @@ func ParseFile(basePath string, filePath string, options ParseOptions) (shared.P
 	}
 
 	return variables, nil
-}
-
-func getFileHash(file *os.File) string {
-	hasher := sha256.New()
-
-	if _, err := io.Copy(hasher, file); err != nil {
-		panic(err)
-	}
-
-	return hex.EncodeToString(hasher.Sum(nil))
 }

@@ -34,7 +34,7 @@ func PushChanges(configs utils.PatcherConfigs) func(w http.ResponseWriter, r *ht
 			return
 		}
 
-		newVariables, err := variables.UpdateVariables(payload.Update)
+		newVariables, err := variables.GetPatch(payload.Update)
 		if err != nil {
 			http.Error(w, "Could not update variables", http.StatusBadRequest)
 			return
@@ -55,10 +55,10 @@ func PushChanges(configs utils.PatcherConfigs) func(w http.ResponseWriter, r *ht
 
 		user := r.Context().Value("user").(*auth.PortalUser)
 
-		for filePath := range newVariables.FileHashes {
+		for filePath, fileVars := range newVariables {
 			fileContent, fileSha := github.GetRepoFile(filePath)
 
-			newContent, err := patcher.PatchFile(fileContent, newVariables)
+			newContent, err := patcher.PatchFile(fileContent, fileVars)
 			if err != nil {
 				http.Error(w, "Could not patch file", http.StatusInternalServerError)
 			}

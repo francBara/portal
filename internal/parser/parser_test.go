@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"os"
 	"portal/shared"
 	"testing"
@@ -14,17 +15,23 @@ func TestSubfolders(t *testing.T) {
 		t.Errorf("Error parsing project")
 	}
 
-	if len(variables.Integer) != 1 {
-		t.Errorf("Bad integer variables length: %d", len(variables.Integer))
-	}
-	if len(variables.String) != 1 {
-		t.Errorf("Bad string variables length: %d", len(variables.String))
+	for k, _ := range variables {
+		fmt.Println(k)
 	}
 
-	if variables.Integer["maxChats"].Name != "maxChats" || variables.Integer["maxChats"].Value != 24 {
+	fileVars := variables["chats/Chat.tsx"]
+
+	if len(fileVars.Integer) != 1 {
+		t.Errorf("Bad integer fileVars length: %d", len(fileVars.Integer))
+	}
+	if len(fileVars.String) != 1 {
+		t.Errorf("Bad string fileVars length: %d", len(fileVars.String))
+	}
+
+	if fileVars.Integer["maxChats"].Name != "maxChats" || fileVars.Integer["maxChats"].Value != 24 {
 		t.Error("Bad number variable")
 	}
-	if variables.String["chatName"].Name != "chatName" || variables.String["chatName"].Value != "My Chat" {
+	if fileVars.String["chatName"].Name != "chatName" || fileVars.String["chatName"].Value != "My Chat" {
 		t.Error("Bad string variable")
 	}
 }
@@ -35,21 +42,13 @@ func TestJavascript(t *testing.T) {
 		t.Errorf("error parsing project: " + err.Error())
 	}
 
-	file, err := os.Open("tests/simple_javascript.js")
-	if err != nil {
-		panic(err)
-	}
-	fileHash := getFileHash(file)
-	file.Close()
-
-	expected := shared.PortalVariables{
+	expected := shared.FileVariables{
 		Integer: map[string]shared.IntVariable{
 			"a": {
 				PortalVariable: shared.PortalVariable{
 					Name:        "a",
 					DisplayName: "a",
 					View:        "simple_javascript.js",
-					FilePath:    "simple_javascript.js",
 					Group:       "gruppaccio",
 				},
 				Max:   1234,
@@ -64,7 +63,6 @@ func TestJavascript(t *testing.T) {
 					Name:        "b",
 					DisplayName: "ecco il bel nome",
 					View:        "simple_javascript.js",
-					FilePath:    "simple_javascript.js",
 					Group:       "altro",
 				},
 				Value: "ciao",
@@ -74,15 +72,12 @@ func TestJavascript(t *testing.T) {
 					Name:        "c",
 					DisplayName: "nome",
 					View:        "simple_javascript.js",
-					FilePath:    "simple_javascript.js",
 					Group:       "Default",
 				},
 				Value: "eccoci",
 			},
 		},
-		FileHashes: map[string]string{
-			"simple_javascript.js": fileHash,
-		},
+		UI: map[string]shared.UIVariable{},
 	}
 
 	if diff := cmp.Diff(expected, variables); diff != "" {

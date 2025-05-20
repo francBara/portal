@@ -20,7 +20,7 @@ func UpdateTailwindLine(line string, newValue int) string {
 }
 
 // patchUI applies UI variables to a file, using updateTree.js tool.
-func patchUI(content string, roots map[string]shared.UIRoot) (newContent string, err error) {
+func patchUI(content string, roots map[string]shared.UIVariable) (newContent string, err error) {
 	if len(roots) == 0 {
 		return content, nil
 	}

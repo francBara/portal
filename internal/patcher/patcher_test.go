@@ -18,7 +18,7 @@ const b = 2;
 let asd = "asdf";
 `
 
-	newVariables := shared.PortalVariables{
+	newVariables := shared.FileVariables{
 		Integer: map[string]shared.IntVariable{
 			"b": {
 				PortalVariable: shared.PortalVariable{
@@ -62,7 +62,7 @@ border-round-2
 duration-[1000ms]
 "}
 `
-	newVariables := shared.PortalVariables{
+	newVariables := shared.FileVariables{
 		Integer: map[string]shared.IntVariable{
 			"border-round": {
 				PortalVariable: shared.PortalVariable{

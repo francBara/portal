@@ -27,14 +27,14 @@ func UpdatePreview() func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		newVariables, err := variables.UpdateVariables(varsUpdate)
+		newVariables, err := variables.GetPatch(varsUpdate)
 		if err != nil {
 			slog.Error(err.Error())
 			http.Error(w, "Could not update variables", http.StatusInternalServerError)
 			return
 		}
 
-		for filePath := range newVariables.FileHashes {
+		for filePath, fileVars := range newVariables {
 			globalFilePath := fmt.Sprintf("%s/%s", github.RepoFolderName, filePath)
 
 			rawFile, err := os.ReadFile(globalFilePath)
@@ -43,7 +43,7 @@ func UpdatePreview() func(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			newContent, err := patcher.PatchFile(string(rawFile), newVariables)
+			newContent, err := patcher.PatchFile(string(rawFile), fileVars)
 			if err != nil {
 				http.Error(w, "Could not patch file", http.StatusInternalServerError)
 				return
