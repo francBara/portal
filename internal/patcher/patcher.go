@@ -91,6 +91,8 @@ func PatchFile(content string, newVariables shared.FileVariables) (patchedConten
 				newLine := UpdateTailwindLine(line, newVar.Value)
 
 				newContent = append(newContent, newLine)
+			} else {
+				newContent = append(newContent, line)
 			}
 		} else {
 			newContent = append(newContent, line)

@@ -8,7 +8,6 @@ import (
 	"os"
 	"portal/internal/patcher"
 	"portal/internal/server/github"
-	"portal/internal/server/preview/build"
 	"portal/internal/server/utils"
 	"portal/shared"
 )
@@ -54,12 +53,6 @@ func UpdatePreview() func(w http.ResponseWriter, r *http.Request) {
 				panic(err)
 			}
 		}
-
-		slog.Info("updating preview")
-
-		build.Build(build.BuildOptions{Verbose: false})
-
-		slog.Info("preview updated")
 	}
 }
 
