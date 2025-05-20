@@ -15,7 +15,10 @@ func (varsMap *VariablesMap) add(variable PortalVariable, value map[string]any) 
 		(*varsMap)[variable.View][variable.Group] = make(map[string]map[string]any)
 	}
 
+	value["displayName"] = variable.DisplayName
+	value["filePath"] = variable.FilePath
 	(*varsMap)[variable.View][variable.Group][variable.Name] = value
+
 }
 
 // ToMap converts PortalVariables struct to a hash map containing variables as final values and keys hierarchy: file -> group -> variable name.
@@ -24,34 +27,28 @@ func (variables PortalVariables) ToMap() VariablesMap {
 
 	for _, intVar := range variables.Integer {
 		mappedVariables.add(intVar.PortalVariable, map[string]any{
-			"displayName": intVar.DisplayName,
-			"filePath":    intVar.FilePath,
-			"value":       intVar.Value,
-			"max":         intVar.Max,
-			"min":         intVar.Min,
-			"step":        intVar.Step,
-			"type":        "integer",
+			"value": intVar.Value,
+			"max":   intVar.Max,
+			"min":   intVar.Min,
+			"step":  intVar.Step,
+			"type":  "integer",
 		})
 	}
 
 	for _, floatVar := range variables.Float {
 		mappedVariables.add(floatVar.PortalVariable, map[string]any{
-			"displayName": floatVar.DisplayName,
-			"filePath":    floatVar.FilePath,
-			"value":       floatVar.Value,
-			"max":         floatVar.Max,
-			"min":         floatVar.Min,
-			"step":        floatVar.Step,
-			"type":        "float",
+			"value": floatVar.Value,
+			"max":   floatVar.Max,
+			"min":   floatVar.Min,
+			"step":  floatVar.Step,
+			"type":  "float",
 		})
 	}
 
 	for _, stringVar := range variables.String {
 		mappedVariables.add(stringVar.PortalVariable, map[string]any{
-			"displayName": stringVar.DisplayName,
-			"filePath":    stringVar.FilePath,
-			"value":       stringVar.Value,
-			"type":        "string",
+			"value": stringVar.Value,
+			"type":  "string",
 		})
 	}
 

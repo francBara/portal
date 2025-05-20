@@ -1,8 +1,6 @@
 package shared
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -82,12 +80,9 @@ type PortalVariables struct {
 // Init allocates PortalVariables inner maps.
 func (variables *PortalVariables) Init() {
 	variables.FileHashes = make(map[string]string)
-
 	variables.Integer = make(map[string]IntVariable)
 	variables.Float = make(map[string]FloatVariable)
-
 	variables.String = make(map[string]StringVariable)
-
 	variables.UI = make(map[string]UIRoot)
 }
 
@@ -107,6 +102,7 @@ func (variables PortalVariables) DumpVariables() {
 
 // UpdateVariables returns new PortalVariables with values updated by varsMap.
 func (variables PortalVariables) UpdateVariables(varsMap VariablesMap) (PortalVariables, error) {
+	//TODO: Should variable names be unique?
 	for _, groups := range varsMap {
 		for _, groupVars := range groups {
 			for varName, variable := range groupVars {
@@ -142,6 +138,23 @@ func (variables PortalVariables) UpdateVariables(varsMap VariablesMap) (PortalVa
 					currVar.Value = value
 					variables.String[varName] = currVar
 				}
+
+				if _, ok := variables.UI[varName]; ok {
+					marshaled, err := json.Marshal(variable)
+					if err != nil {
+						panic(err)
+					}
+
+					var root UINode
+
+					err = json.Unmarshal(marshaled, &root)
+					if err != nil {
+						panic(err)
+					}
+
+					currVar := variables.UI[varName]
+					currVar.UINode = root
+				}
 			}
 		}
 	}
@@ -175,14 +188,6 @@ func (variables PortalVariables) Merge(newVariables PortalVariables) PortalVaria
 	merged.FileHashes = mergeMaps(variables.FileHashes, newVariables.FileHashes)
 
 	return merged
-}
-
-func (variables PortalVariables) HasFileChanged(fileContent string, filePath string) bool {
-	hasher := sha256.New()
-	hasher.Write([]byte(fileContent))
-	hashString := hex.EncodeToString(hasher.Sum(nil))
-
-	return hashString != variables.FileHashes[filePath]
 }
 
 // Length returns the total number of variables in PortalVariables.
