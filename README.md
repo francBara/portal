@@ -1,4 +1,4 @@
-# Portal
+# Portal 🌀
 
 A no-code tool to edit existing codebases, the developers way.
 
@@ -14,7 +14,7 @@ A no-code tool to edit existing codebases, the developers way.
 
     `docker run portal -p 8080:8080`
 
-3. Log into the web dashbaord and edit your project.
+3. Log into the web dashboard and edit your project.
 
 ## Features
 - Interactive, user friendly no-code dashboard.
