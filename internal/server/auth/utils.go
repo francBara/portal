@@ -2,7 +2,6 @@ package auth
 
 import (
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"os"
 	"strings"
@@ -16,16 +15,8 @@ type Admin struct {
 var admin Admin
 
 func loadAdmin() error {
-	file, err := os.Open("config.json")
-	if err != nil {
-		return err
-	}
-
-	decoder := json.NewDecoder(file)
-	if err := decoder.Decode(&admin); err != nil {
-		panic(err)
-	}
-	file.Close()
+	admin.Username = os.Getenv("ADMIN_USERNAME")
+	admin.Password = os.Getenv("ADMIN_PASSWORD")
 
 	if admin.Username == "" {
 		admin.Username = "admin"

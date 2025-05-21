@@ -22,7 +22,6 @@ RUN apk add --no-cache git
 
 COPY --from=builder /app/portal .
 COPY --from=builder /app/tools tools
-COPY --from=builder /app/config.json .
 COPY --from=builder /app/static static
 
 EXPOSE 8080 3000

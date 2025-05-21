@@ -19,14 +19,11 @@ import (
 )
 
 func RunServer(port int) {
-	configs, err := utils.LoadConfigs()
-	if err != nil {
-		log.Fatalln("Could not load config file")
-	}
+	configs := utils.LoadConfigs()
 
 	configs.Print()
 
-	err = github.Init(configs.RepoName, configs.RepoOwner, configs.UserName, configs.RepoBranch, configs.Pac)
+	err := github.Init(configs.RepoName, configs.RepoOwner, configs.GithubUsername, configs.RepoBranch, configs.Pac)
 	if err != nil {
 		slog.Error("Error initializing github client", "error", err.Error())
 	}

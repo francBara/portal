@@ -2,17 +2,16 @@ package utils
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
-	"log"
 	"log/slog"
 
+	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 )
 
 type PatcherConfigs struct {
 	RepoOwner       string `json:"repoOwner"`
-	UserName        string `json:"userName"`
+	GithubUsername  string `json:"githubUsername"`
 	RepoName        string `json:"repoName"`
 	RepoBranch      string `json:"repoBranch"`
 	Pac             string `json:"pac"`
@@ -39,10 +38,10 @@ var configFileCandidates = []struct {
 	{"config", "toml"},
 }
 
-func LoadConfigs() (PatcherConfigs, error) {
-	viper.AutomaticEnv()
-	viper.SetEnvPrefix("portal")
+func LoadConfigs() PatcherConfigs {
+	godotenv.Load()
 
+	viper.AutomaticEnv()
 	viper.AddConfigPath(".")
 
 	viper.SetDefault("repoBranch", "main")
@@ -51,6 +50,14 @@ func LoadConfigs() (PatcherConfigs, error) {
 
 	var config PatcherConfigs
 
+	viper.BindEnv("repoOwner", "REPO_OWNER")
+	viper.BindEnv("githubUsername", "GITHUB_USERNAME")
+	viper.BindEnv("repoName", "REPO_NAME")
+	viper.BindEnv("repoBranch", "REPO_BRANCH")
+	viper.BindEnv("pac", "PAC")
+	viper.BindEnv("openPullRequest", "OPEN_PULL_REQUEST")
+	viper.BindEnv("servePreview", "SERVE_PREVIEW")
+
 	for _, candidate := range configFileCandidates {
 		viper.SetConfigName(candidate.Name)
 		viper.SetConfigType(candidate.Type)
@@ -58,19 +65,18 @@ func LoadConfigs() (PatcherConfigs, error) {
 		err := viper.ReadInConfig()
 		if err == nil {
 			fmt.Println("Loaded config:", viper.ConfigFileUsed())
-
-			err := viper.Unmarshal(&config)
-			if err != nil {
-				log.Fatalf("unable to decode into struct, %v", err)
-			}
-
-			if config.RepoOwner == "" {
-				config.RepoOwner = config.UserName
-			}
-
-			return config, nil
+			break
 		}
 	}
 
-	return config, errors.New("did not find config file")
+	err := viper.Unmarshal(&config)
+	if err != nil {
+		panic(err)
+	}
+
+	if config.RepoOwner == "" {
+		config.RepoOwner = config.GithubUsername
+	}
+
+	return config
 }

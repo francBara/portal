@@ -1,5 +1,6 @@
 variables.json
 config.json
+.env
 users.json
 app-preview
 node_modules

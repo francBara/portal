@@ -62,7 +62,7 @@ The scope of the configuration are remote repo access and dashboard authenticati
 | Variable Name         | Required | Default    | Description                                  |
 |-----------------------|----------|------------|----------------------------------------------|
 | `REPO_OWNER`          | No       | —          | Owner of the repository. Defaults to `USER_NAME` if unset. |
-| `USER_NAME`           | Yes      | —          | Git username used for cloning/pushing.       |
+| `GITHUB_USERNAME`           | Yes      | —          | Git username used for cloning/pushing.       |
 | `REPO_NAME`           | Yes      | —          | Name of the repository to work with.         |
 | `REPO_BRANCH`         | No       | `main`     | The branch to use for operations.            |
 | `PAC`                 | Yes      | —          | Personal access token or authentication secret. |
