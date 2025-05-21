@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"crypto/rand"
 	"encoding/base64"
 	"errors"
 	"os"
@@ -68,4 +69,14 @@ func decodeBearerAuth(authHeader string) (string, error) {
 	}
 
 	return parts[1], nil
+}
+
+func generateSecureBytes() []byte {
+	secret := make([]byte, 32)
+	_, err := rand.Read(secret)
+	if err != nil {
+		panic(err)
+	}
+
+	return secret
 }

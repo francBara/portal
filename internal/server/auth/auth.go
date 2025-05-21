@@ -18,14 +18,14 @@ type PortalUser struct {
 	PasswordHash string `json:"passwordHash"`
 }
 
-var jwtSecret = []byte("My secret")
+var jwtSecret = generateSecureBytes()
 
 type tokenResponse struct {
 	User  PortalUser `json:"user"`
 	Token string     `json:"token"`
 }
 
-// Signin accepts Basic authentication header and returns a JWT id token.
+// Signin accepts Basic authentication header and returns a JWT access token.
 func Signin() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		username, password, err := decodeBasicAuth(r.Header.Get("Authorization"))
