@@ -1,50 +1,51 @@
 package auth
 
 import (
-	"crypto/sha256"
 	"encoding/base64"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"os"
 	"strings"
 )
 
-func getUsers() []PortalUser {
-	file, err := os.Open("users.json")
+type Admin struct {
+	Username string `json:"adminUsername"`
+	Password string `json:"adminPassword"`
+}
+
+var admin Admin
+
+func loadAdmin() error {
+	file, err := os.Open("config.json")
 	if err != nil {
-		panic(err)
+		return err
 	}
 
-	var users []PortalUser
-
 	decoder := json.NewDecoder(file)
-	if err := decoder.Decode(&users); err != nil {
+	if err := decoder.Decode(&admin); err != nil {
 		panic(err)
 	}
 	file.Close()
 
-	return users
+	if admin.Username == "" {
+		admin.Username = "admin"
+	}
+	if admin.Password == "" {
+		admin.Password = "admin"
+	}
+
+	return nil
 }
 
-func checkUser(email string, password string) (loginSuccessful bool) {
-	for _, user := range getUsers() {
-		if user.Email == email && user.PasswordHash == hashPassword(password) {
-			return true
+func checkUser(username string, password string) (loginSuccessful bool) {
+	if admin.Username == "" {
+		err := loadAdmin()
+		if err != nil {
+			panic(err)
 		}
 	}
 
-	return false
-}
-
-func getUser(email string) (PortalUser, error) {
-	for _, user := range getUsers() {
-		if user.Email == email {
-			return user, nil
-		}
-	}
-
-	return PortalUser{}, errors.New("user not found")
+	return admin.Username == username && admin.Password == password
 }
 
 func decodeBasicAuth(authHeader string) (string, string, error) {
@@ -76,10 +77,4 @@ func decodeBearerAuth(authHeader string) (string, error) {
 	}
 
 	return parts[1], nil
-}
-
-func hashPassword(password string) string {
-	hasher := sha256.New()
-	hasher.Write([]byte(password))
-	return hex.EncodeToString(hasher.Sum(nil))
 }

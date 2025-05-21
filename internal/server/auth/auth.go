@@ -28,21 +28,21 @@ type tokenResponse struct {
 // Signin accepts Basic authentication header and returns a JWT id token.
 func Signin() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		email, password, err := decodeBasicAuth(r.Header.Get("Authorization"))
+		username, password, err := decodeBasicAuth(r.Header.Get("Authorization"))
 		if err != nil {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
-		slog.Info("Login attempt", "email", email)
+		slog.Info("Login attempt", "username", username)
 
-		if !checkUser(email, password) {
-			http.Error(w, "Email or password are not correct", http.StatusUnauthorized)
+		if !checkUser(username, password) {
+			http.Error(w, "Username or password are not correct", http.StatusUnauthorized)
 			return
 		}
 
 		claims := jwt.MapClaims{
-			"sub": email,
+			"sub": username,
 			"exp": time.Now().Add(time.Hour * 2).Unix(),
 			"iat": time.Now().Unix(),
 		}
@@ -55,22 +55,12 @@ func Signin() func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		user, err := getUser(email)
-		if err != nil {
-			http.Error(w, "Not Found", http.StatusNotFound)
-			return
-		}
-
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(tokenResponse{
-			User: PortalUser{
-				Email: email,
-				Name:  user.Name,
-			},
 			Token: tokenString,
 		})
 
-		slog.Info(fmt.Sprintf("User %s logged in", email))
+		slog.Info(fmt.Sprintf("User %s logged in", username))
 	}
 }
 
@@ -101,13 +91,7 @@ func AuthenticateUser() func(next http.Handler) http.Handler {
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			}
 
-			user, err := getUser(subject)
-			if err != nil {
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
-				return
-			}
-
-			r = r.WithContext(context.WithValue(r.Context(), "user", &user))
+			r = r.WithContext(context.WithValue(r.Context(), "user", &subject))
 
 			next.ServeHTTP(w, r)
 		})
