@@ -61,11 +61,11 @@ The scope of the configuration are remote repo access and dashboard authenticati
 
 | Variable Name         | Required | Default    | Description                                  |
 |-----------------------|----------|------------|----------------------------------------------|
-| `REPO_OWNER`          | No       | —          | Owner of the repository. Defaults to `USER_NAME` if unset. |
-| `GITHUB_USERNAME`           | Yes      | —          | Git username used for cloning/pushing.       |
+| `GITHUB_USERNAME`     | Yes      | —          | Git username used for cloning/pushing.       |
 | `REPO_NAME`           | Yes      | —          | Name of the repository to work with.         |
-| `REPO_BRANCH`         | No       | `main`     | The branch to use for operations.            |
 | `PAC`                 | Yes      | —          | Personal access token or authentication secret. |
+| `REPO_OWNER`          | No       | —          | Owner of the repository. Defaults to `USER_NAME` if unset. |
+| `REPO_BRANCH`         | No       | `main`     | The branch to use for operations.            |
 | `OPEN_PULL_REQUEST`   | No       | `true`     | Whether to automatically open pull requests, in this case a new branch will be created. |
 | `SERVE_PREVIEW`       | No       | `true`     | Whether to serve a realtime preview, in case of React projects.            |
 | `ADMIN_USERNAME`      | No       | `admin`    | The username to log in the dashboard.        |
