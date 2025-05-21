@@ -5,14 +5,14 @@ A no-code tool to edit existing codebases, the developers way.
 **Portal** parses your code looking for *@portal* comments, then serves a web-based dashboard to edit, preview and push changes.
 
 1. Annotate the code you want to be editable.
-    ```
-    @portal
+    ```js
+    //@portal
     let minItems = 2;
     ```
 
 2. Spin up the Portal container locally or in your cloud environment, configuring repo access and users.
 
-    `docker run portal -p 8080:8080`
+    `docker run portal -p 8080:8080 -e REPO_NAME=myrepo -e GITHUB_USERNAME=myname -e PAC=mytoken`
 
 3. Log into the web dashboard and edit your project.
 
@@ -28,14 +28,14 @@ A no-code tool to edit existing codebases, the developers way.
 ### Variable portal
 Makes the annotated variable editable in the web dashboard.
 ```js
-@portal
+//@portal
 let minItems = 2;
 ```
 
 ### All variables portal
 Makes all variables under the annotation in the current file editable.
 ```js
-@portal all
+//@portal all
 
 let minItems = 2;
 
@@ -44,8 +44,8 @@ const maxItems = 10;
 
 ### UI variables portal
 If there is a React/Tailwind component tree, it makes all CSS parameters in the component tree editable.
-```html
-@portal ui
+```js
+//@portal ui
 
 return (
     <div className="h-8 w-8">
@@ -64,14 +64,14 @@ The scope of the configuration are remote repo access and dashboard authenticati
 | `GITHUB_USERNAME`     | Yes      | —          | Git username used for cloning/pushing.       |
 | `REPO_NAME`           | Yes      | —          | Name of the repository to work with.         |
 | `PAC`                 | Yes      | —          | Personal access token or authentication secret. |
-| `REPO_OWNER`          | No       | —          | Owner of the repository. Defaults to `USER_NAME` if unset. |
+| `REPO_OWNER`          | No       | —          | Owner of the repository. Defaults to `GITHUB_USERNAME` if unset. |
 | `REPO_BRANCH`         | No       | `main`     | The branch to use for operations.            |
 | `OPEN_PULL_REQUEST`   | No       | `true`     | Whether to automatically open pull requests, in this case a new branch will be created. |
 | `SERVE_PREVIEW`       | No       | `true`     | Whether to serve a realtime preview, in case of React projects.            |
 | `ADMIN_USERNAME`      | No       | `admin`    | The username to log in the dashboard.        |
 | `ADMIN_PASSWORD`      | No       | `admin`    | The password to log in the dashboard.        |
 
-Minimum working `.env`
+Sample `.env` with custom repo access and custom username and password
 ```
 REPO_NAME      = portal_demo
 USER_NAME      = myGithubUser
@@ -80,7 +80,7 @@ PAC            = my_personal_access_token
 ADMIN_USERNAME = pippo
 ADMIN_PASSWORD = mypassword
 ```
-
+> ⚠️ **Warning**: Always set up custom admin username and password in production.
 
 ## Components
 
