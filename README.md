@@ -27,14 +27,14 @@ A no-code tool to edit existing codebases, the developers way.
 
 ### Variable portal
 Makes the annotated variable editable in the web dashboard.
-```
+```js
 @portal
 let minItems = 2;
 ```
 
 ### All variables portal
 Makes all variables under the annotation in the current file editable.
-```
+```js
 @portal all
 
 let minItems = 2;
@@ -44,7 +44,7 @@ const maxItems = 10;
 
 ### UI variables portal
 If there is a React/Tailwind component tree, it makes all CSS parameters in the component tree editable.
-```
+```html
 @portal ui
 
 return (
@@ -56,21 +56,31 @@ return (
 
 ## Server configuration
 
-The server can be configured via env variables, config file and CLI arguments. 
+The server can be configured via env variables.
+The scope of the configuration are remote repo access and dashboard authentication.
 
-The scope of configuration is to repo access and Portal admin user.
+| Variable Name         | Required | Default    | Description                                  |
+|-----------------------|----------|------------|----------------------------------------------|
+| `REPO_OWNER`          | No       | —          | Owner of the repository. Defaults to `USER_NAME` if unset. |
+| `USER_NAME`           | Yes      | —          | Git username used for cloning/pushing.       |
+| `REPO_NAME`           | Yes      | —          | Name of the repository to work with.         |
+| `REPO_BRANCH`         | No       | `main`     | The branch to use for operations.            |
+| `PAC`                 | Yes      | —          | Personal access token or authentication secret. |
+| `OPEN_PULL_REQUEST`   | No       | `true`     | Whether to automatically open pull requests, in this case a new branch will be created. |
+| `SERVE_PREVIEW`       | No       | `true`     | Whether to serve a realtime preview, in case of React projects.            |
+| `ADMIN_USERNAME`      | No       | `admin`    | The username to log in the dashboard.        |
+| `ADMIN_PASSWORD`      | No       | `admin`    | The password to log in the dashboard.        |
 
-`config.json`
+Minimum working `.env`
 ```
-{
-    "repoOwner": "francBara",
-    "repoName": "portal-demo",
-    "repoBranch": "main",
-    "pac": "YOUR_PERSONAL_ACCESS_TOKEN",
-    "adminUsername": "admin",
-    "adminPassword": "XXX"
-}
+REPO_NAME      = portal_demo
+USER_NAME      = myGithubUser
+PAC            = my_personal_access_token
+
+ADMIN_USERNAME = pippo
+ADMIN_PASSWORD = mypassword
 ```
+
 
 ## Components
 
