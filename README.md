@@ -58,7 +58,7 @@ return (
 
 The server can be configured via env variables, config file and CLI arguments. 
 
-The scope of configuration is to set users and repo access.
+The scope of configuration is to repo access and Portal admin user.
 
 `config.json`
 ```
@@ -67,17 +67,9 @@ The scope of configuration is to set users and repo access.
     "repoName": "portal-demo",
     "repoBranch": "main",
     "pac": "YOUR_PERSONAL_ACCESS_TOKEN",
+    "adminUsername": "admin",
+    "adminPassword": "XXX"
 }
-```
-`users.json`
-```
-[
-    {
-        "name": "Francesco",
-        "email": "francesco.barabino@tiscali.it",
-        "passwordHash": "9c248794a4aca85e19781fa63966f66bb55d394ec2574a33878dd68b4bdedacd"
-    }
-]
 ```
 
 ## Components
