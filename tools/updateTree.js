@@ -3,14 +3,13 @@ const traverse = require('@babel/traverse').default;
 const t = require('@babel/types');
 const recast = require('recast');
 
-function updateNode(node, newValue) {
+function updateNode(node, newValue, highlightedNode) {
     if (!t.isJSXElement(node)) return;
 
     for (let attr of node.openingElement.attributes) {
         if (t.isJSXAttribute(attr) && t.isJSXIdentifier(attr.name) && attr.name.name === "className") {
             if (t.isStringLiteral(attr.value)) {
-                console.error(`Updating ${attr.value.value} with ${parseTailwind(newValue.properties)}`);
-                attr.value.value = parseTailwind(newValue.properties);
+                attr.value.value = parseTailwind(newValue.properties, newValue.id === highlightedNode);
             }
             else if (t.isJSXExpressionContainer(attr.value) && t.isTemplateLiteral(attr.value.expression)) {
                 //TODO: Implement expression container parsing
@@ -23,14 +22,14 @@ function updateNode(node, newValue) {
     for (let i = 0; i < node.children.length; i++) {
         if (t.isJSXElement(node.children[i])) {
             if (newValue.children[newValueIndex]) {
-                updateNode(node.children[i], newValue.children[newValueIndex]);
+                updateNode(node.children[i], newValue.children[newValueIndex], highlightedNode);
             }
             newValueIndex += 1;
         }
     }
 }
 
-function parseTailwind(properties) {
+function parseTailwind(properties, isHighlighted) {
     let tailwindString = "";
 
     for (let p of properties) {
@@ -42,6 +41,10 @@ function parseTailwind(properties) {
         }
 
         tailwindString += " ";
+    }
+
+    if (isHighlighted) {
+        tailwindString += "border-2 border-red-500";
     }
 
     return tailwindString.trim();
@@ -67,7 +70,7 @@ process.stdin.on("end", () => {
 
             for (let el of path.node.body.body) {
                 if (t.isReturnStatement(el) && t.isJSXElement(el.argument)) {
-                    updateNode(el.argument, components[rootName]);
+                    updateNode(el.argument, components[rootName], components[rootName].highlightedNode);
                 }
             }
         },
@@ -77,7 +80,7 @@ process.stdin.on("end", () => {
             if (path.node.init && path.node.init.type === "ArrowFunctionExpression") {
                 for (let el of path.node.init.body.body) {
                     if (t.isReturnStatement(el) && t.isJSXElement(el.argument)) {
-                        updateNode(el.argument, components[rootName]);
+                        updateNode(el.argument, components[rootName], components[rootName].highlightedNode);
                     }
                 }
             }

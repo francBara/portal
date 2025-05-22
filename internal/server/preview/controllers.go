@@ -2,12 +2,8 @@ package preview
 
 import (
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"net/http"
-	"os"
-	"portal/internal/patcher"
-	"portal/internal/server/github"
 	"portal/internal/server/utils"
 	"portal/shared"
 )
@@ -33,25 +29,48 @@ func UpdatePreview() func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		for filePath, fileVars := range newVariables {
-			globalFilePath := fmt.Sprintf("%s/%s", github.RepoFolderName, filePath)
+		err = patchPreview(newVariables)
+		if err != nil {
+			http.Error(w, "Could not update preview", http.StatusInternalServerError)
+			return
+		}
+	}
+}
 
-			rawFile, err := os.ReadFile(globalFilePath)
-			if err != nil {
-				slog.Error("Error reading file:", "error", err)
-				return
-			}
+type highlightComponentPayload struct {
+	FilePath   string `json:"filePath"`
+	UIVariable string `json:"varName"`
+	NodeId     int    `json:"nodeId"`
+}
 
-			newContent, err := patcher.PatchFile(string(rawFile), fileVars)
-			if err != nil {
-				http.Error(w, "Could not patch file", http.StatusInternalServerError)
-				return
-			}
+func HighlightComponent() func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var payload highlightComponentPayload
 
-			err = os.WriteFile(globalFilePath, []byte(newContent), 0644)
-			if err != nil {
-				panic(err)
-			}
+		decoder := json.NewDecoder(r.Body)
+
+		err := decoder.Decode(&payload)
+		if err != nil {
+			http.Error(w, "Invalid payload", http.StatusBadRequest)
+			return
+		}
+
+		variables, err := utils.LoadVariables()
+		if err != nil {
+			http.Error(w, "Could not load variables", http.StatusInternalServerError)
+			return
+		}
+
+		uiVar := variables[payload.FilePath].UI[payload.UIVariable]
+
+		uiVar.HighlightedNode = payload.NodeId
+
+		variables[payload.FilePath].UI[payload.UIVariable] = uiVar
+
+		err = patchPreview(variables)
+		if err != nil {
+			http.Error(w, "Could not update preview", http.StatusInternalServerError)
+			return
 		}
 	}
 }

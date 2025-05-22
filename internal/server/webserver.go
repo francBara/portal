@@ -28,6 +28,8 @@ func RunServer(port int) {
 		slog.Error("Error initializing github client", "error", err.Error())
 	}
 
+	utils.LoadVariables()
+
 	if github.GithubClient != nil && configs.ServePreview {
 		go preview.ServePreview()
 	}
@@ -58,6 +60,8 @@ func RunServer(port int) {
 			secureApi.Post("/patch", controllers.PushChanges(configs))
 
 			secureApi.Get("/preview/status", preview.GetPreviewStatus(configs.ServePreview))
+
+			secureApi.Post("/preview/highlight", preview.HighlightComponent())
 
 			// Updates the preview with new variables
 			secureApi.Post("/preview/update", preview.UpdatePreview())

@@ -184,9 +184,13 @@ func uiVariablesFactory(basePath string, filePath string, options portalArgument
 		return nil, err
 	}
 
-	// PortalVariable data is added after tree generation basing on arguments
+	// PortalVariable data and IDs are added after tree generation basing on arguments
 	for rootName, root := range roots {
 		root.PortalVariable = options.getPortalVariable(rootName, filePath)
+
+		startId := 1
+		root.UINode.GenerateIDs(&startId)
+
 		roots[rootName] = root
 	}
 
