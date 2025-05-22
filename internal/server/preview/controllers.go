@@ -65,7 +65,12 @@ func HighlightComponent() func(w http.ResponseWriter, r *http.Request) {
 
 		uiVar.HighlightedNode = payload.NodeId
 
-		variables[payload.FilePath].UI[payload.UIVariable] = uiVar
+		if fileVars, ok := variables[payload.FilePath]; ok {
+			fileVars.UI[payload.UIVariable] = uiVar
+		} else {
+			http.Error(w, "File not found", http.StatusBadRequest)
+			return
+		}
 
 		err = patchPreview(variables)
 		if err != nil {
