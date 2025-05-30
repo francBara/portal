@@ -80,6 +80,29 @@ func HighlightComponent() func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+type buildComponentPayload struct {
+	FilePath string `json:"filePath"`
+}
+
+func BuildComponentPreview() func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var payload buildComponentPayload
+
+		err := json.NewDecoder(r.Body).Decode(&payload)
+		if err != nil {
+			http.Error(w, "Invalid payload", http.StatusBadRequest)
+			return
+		}
+
+		err = buildComponentPreview(payload.FilePath)
+		if err != nil {
+			slog.Error(err.Error())
+			http.Error(w, "Could not build component preview", http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
 type previewStatus struct {
 	IsPreviewAvailable bool `json:"isPreviewAvailable"`
 }

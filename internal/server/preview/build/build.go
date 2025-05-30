@@ -38,7 +38,7 @@ func copyStatic() error {
 		return err
 	}
 
-	return copyDir(staticFolder, fmt.Sprintf("%s/%s", github.RepoFolderName, BuildFolder))
+	return CopyDir(staticFolder, fmt.Sprintf("%s/%s", github.RepoFolderName, BuildFolder))
 }
 
 func runPostcss() error {

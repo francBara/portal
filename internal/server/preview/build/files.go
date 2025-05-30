@@ -9,7 +9,7 @@ import (
 	"portal/internal/server/github"
 )
 
-func copyFile(src string, dst string) error {
+func CopyFile(src string, dst string) error {
 	sourceFile, err := os.Open(src)
 	if err != nil {
 		return err
@@ -23,10 +23,15 @@ func copyFile(src string, dst string) error {
 	defer destFile.Close()
 
 	_, err = io.Copy(destFile, sourceFile)
+	if err != nil {
+		return err
+	}
+
+	err = destFile.Sync()
 	return err
 }
 
-func copyDir(src string, dst string) error {
+func CopyDir(src string, dst string) error {
 	return filepath.WalkDir(src, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -43,7 +48,7 @@ func copyDir(src string, dst string) error {
 			return os.MkdirAll(targetPath, 0755)
 		}
 
-		return copyFile(path, targetPath)
+		return CopyFile(path, targetPath)
 	})
 }
 

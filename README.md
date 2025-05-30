@@ -73,9 +73,9 @@ The scope of the configuration are remote repo access and dashboard authenticati
 
 Sample `.env` with custom repo access and custom username and password
 ```
-REPO_NAME      = portal_demo
-USER_NAME      = myGithubUser
-PAC            = my_personal_access_token
+REPO_NAME       = portal-demo
+GITHUB_USERNAME = myGithubUser
+PAC             = my_personal_access_token
 
 ADMIN_USERNAME = pippo
 ADMIN_PASSWORD = mypassword
