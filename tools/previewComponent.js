@@ -2,6 +2,7 @@ const fs = require('fs');
 const traverse = require('@babel/traverse').default;
 const t = require('@babel/types');
 const recast = require('recast');
+const path = require('path');
 
 function updateNode(node, newValue, highlightedNode) {
     if (!t.isJSXElement(node)) return;
@@ -69,6 +70,7 @@ process.stdin.on("end", () => {
     traverse(ast, {
         ImportDeclaration(path) {
             result.imports.push(path.node.source.value);
+            path.node.source.value = "./" + path.basename(path.node.source.value);
         },
         // FunctionDeclaration(path) {
         //     const rootName = path.node.id.name;
@@ -92,6 +94,7 @@ process.stdin.on("end", () => {
         // }
     });
 
+    result.sourceCode = recast.print(ast).code;
+
     console.log(JSON.stringify(result));
-    //console.log(recast.print(ast).code);
 });
