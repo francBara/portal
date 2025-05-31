@@ -9,7 +9,7 @@ import (
 	"portal/internal/server/github"
 )
 
-func CopyFile(src string, dst string) error {
+func copyFile(src string, dst string) error {
 	sourceFile, err := os.Open(src)
 	if err != nil {
 		return err
@@ -31,7 +31,7 @@ func CopyFile(src string, dst string) error {
 	return err
 }
 
-func CopyDir(src string, dst string) error {
+func copyDir(src string, dst string) error {
 	return filepath.WalkDir(src, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -48,13 +48,23 @@ func CopyDir(src string, dst string) error {
 			return os.MkdirAll(targetPath, 0755)
 		}
 
-		return CopyFile(path, targetPath)
+		return copyFile(path, targetPath)
 	})
 }
 
 func fileExists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil || !os.IsNotExist(err)
+}
+
+func seekExtension(path string, extensions []string) (foundExtension string, err error) {
+	for _, ext := range extensions {
+		if fileExists(fmt.Sprintf("%s.%s", path, ext)) {
+			return ext, nil
+		}
+	}
+
+	return "", errors.New("no file found for " + path)
 }
 
 func seekFiles(paths []string) (path string, err error) {

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"portal/internal/server/preview/build"
 	"portal/internal/server/utils"
 	"portal/shared"
 )
@@ -94,7 +95,7 @@ func BuildComponentPreview() func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = buildComponentPreview(payload.FilePath)
+		err = build.BuildComponentPage(payload.FilePath)
 		if err != nil {
 			slog.Error(err.Error())
 			http.Error(w, "Could not build component preview", http.StatusInternalServerError)

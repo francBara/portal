@@ -2,7 +2,7 @@ const fs = require('fs');
 const traverse = require('@babel/traverse').default;
 const t = require('@babel/types');
 const recast = require('recast');
-const path = require('path');
+const pathLib = require('path');
 
 function updateNode(node, newValue, highlightedNode) {
     if (!t.isJSXElement(node)) return;
@@ -63,35 +63,32 @@ process.stdin.on("end", () => {
         parser: require("recast/parsers/babel-ts")
     });
 
-    const components = input.components;
-
     const result = {imports: []};
 
     traverse(ast, {
         ImportDeclaration(path) {
             result.imports.push(path.node.source.value);
-            path.node.source.value = "./" + path.basename(path.node.source.value);
+            if (path.node.source.value[0] === ".") {
+                path.node.source.value = "./" + pathLib.basename(path.node.source.value);
+            }
         },
-        // FunctionDeclaration(path) {
-        //     const rootName = path.node.id.name;
+        FunctionDeclaration(path) {
+            if (path.node.leadingComments.length > 0) {
+                path.node.id.name = "ComponentPreview";
+                console.error(path.node.params);
+            }
+        },
+        VariableDeclarator(path) {
+            const rootName = path.node.id.name;
 
-        //     for (let el of path.node.body.body) {
-        //         if (t.isReturnStatement(el) && t.isJSXElement(el.argument)) {
-        //             updateNode(el.argument, components[rootName], components[rootName].highlightedNode);
-        //         }
-        //     }
-        // },
-        // VariableDeclarator(path) {
-        //     const rootName = path.node.id.name;
-
-        //     if (path.node.init && path.node.init.type === "ArrowFunctionExpression") {
-        //         for (let el of path.node.init.body.body) {
-        //             if (t.isReturnStatement(el) && t.isJSXElement(el.argument)) {
-        //                 updateNode(el.argument, components[rootName], components[rootName].highlightedNode);
-        //             }
-        //         }
-        //     }
-        // }
+            if (path.node.init && path.node.init.type === "ArrowFunctionExpression") {
+                for (let el of path.node.init.body.body) {
+                    if (t.isReturnStatement(el) && t.isJSXElement(el.argument)) {
+                        //updateNode(el.argument, components[rootName], components[rootName].highlightedNode);
+                    }
+                }
+            }
+        }
     });
 
     result.sourceCode = recast.print(ast).code;
