@@ -73,20 +73,9 @@ process.stdin.on("end", () => {
             }
         },
         FunctionDeclaration(path) {
-            if (path.node.leadingComments.length > 0) {
-                path.node.id.name = "ComponentPreview";
-                console.error(path.node.params);
-            }
-        },
-        VariableDeclarator(path) {
-            const rootName = path.node.id.name;
-
-            if (path.node.init && path.node.init.type === "ArrowFunctionExpression") {
-                for (let el of path.node.init.body.body) {
-                    if (t.isReturnStatement(el) && t.isJSXElement(el.argument)) {
-                        //updateNode(el.argument, components[rootName], components[rootName].highlightedNode);
-                    }
-                }
+            if (path.node.leadingComments) {
+                //path.node.id.name = "ComponentPreview";
+                //console.error(path.node.params);
             }
         }
     });

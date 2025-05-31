@@ -1,61 +1,24 @@
 package build
 
 import (
-	"bytes"
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"portal/internal/server/github"
+	"portal/shared"
 )
 
 func BuildComponentPage(componentFilePath string) error {
-	file, err := os.ReadFile(fmt.Sprintf("%s/%s", github.RepoFolderName, componentFilePath))
+	err := os.MkdirAll("component-preview/src/components", 0755)
 	if err != nil {
 		return err
 	}
 
-	var input bytes.Buffer
-	err = json.NewEncoder(&input).Encode(map[string]any{
-		"sourceCode": string(file),
-	})
-	if err != nil {
-		return err
-	}
+	visitedImports := make(map[string]struct{})
 
-	cmd := exec.Command("node", "tools/previewComponent.js")
-
-	var out bytes.Buffer
-
-	cmd.Stdout = &out
-	cmd.Stderr = os.Stderr
-	cmd.Stdin = &input
-
-	err = cmd.Run()
-	if err != nil {
-		return err
-	}
-
-	var result struct {
-		SourceCode string   `json:"sourceCode"`
-		Imports    []string `json:"imports"`
-	}
-
-	err = json.NewDecoder(&out).Decode(&result)
-	if err != nil {
-		return err
-	}
-
-	slog.Info("Initializing single component preview...")
-	err = initComponentProject(result.SourceCode)
-	if err != nil {
-		return err
-	}
-
-	slog.Info("Handling imports...")
-	err = handleImports(componentFilePath, result.Imports)
+	err = handleImports(componentFilePath, visitedImports)
 	if err != nil {
 		return err
 	}
@@ -65,34 +28,51 @@ func BuildComponentPage(componentFilePath string) error {
 	return nil
 }
 
-func initComponentProject(newSourceCode string) error {
-	err := os.MkdirAll("component-preview/src/components", 0755)
+func handleImports(componentFilePath string, visited map[string]struct{}) error {
+	if _, ok := visited[componentFilePath]; ok {
+		return nil
+	}
+
+	slog.Info("Importing " + componentFilePath)
+
+	visited[componentFilePath] = struct{}{}
+
+	file, err := os.ReadFile(filepath.Join(github.RepoFolderName, componentFilePath))
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile("component-preview/src/components/ComponentPreview.tsx", []byte(newSourceCode), 0644)
+	out, err := shared.ExecuteTool("previewComponent", map[string]any{
+		"sourceCode": string(file),
+	})
 	if err != nil {
 		return err
 	}
 
-	return nil
-}
+	var result struct {
+		SourceCode string   `json:"sourceCode"`
+		Imports    []string `json:"imports"`
+	}
 
-func handleImports(componentFilePath string, imports []string) error {
-	for _, importPath := range imports {
+	if err = json.NewDecoder(&out).Decode(&result); err != nil {
+		return err
+	}
+
+	err = os.WriteFile(filepath.Join("component-preview/src/components", filepath.Base(componentFilePath)), []byte(result.SourceCode), 0644)
+	if err != nil {
+		return err
+	}
+
+	for _, importPath := range result.Imports {
 		if importPath[0] == '.' {
-			// Relative imports
-			srcPath := filepath.Join(github.RepoFolderName, filepath.Dir(componentFilePath), importPath)
-			destPath := filepath.Join("component-preview/src/components", filepath.Base(importPath))
-
-			fileExt, err := seekExtension(srcPath, []string{"", "jsx", "tsx", "js", "ts"})
+			// Other imports
+			importedFilePath := filepath.Join(filepath.Dir(componentFilePath), importPath)
+			fileExt, err := seekExtension(filepath.Join(github.RepoFolderName, importedFilePath), []string{"", "jsx", "tsx", "js", "ts"})
 			if err != nil {
 				return err
 			}
 
-			err = copyFile(srcPath+fileExt, destPath+fileExt)
-			if err != nil {
+			if err = handleImports(importedFilePath+"."+fileExt, visited); err != nil {
 				return err
 			}
 		} else {

@@ -59,7 +59,9 @@ func fileExists(path string) bool {
 
 func seekExtension(path string, extensions []string) (foundExtension string, err error) {
 	for _, ext := range extensions {
-		if fileExists(fmt.Sprintf("%s.%s", path, ext)) {
+		newPath := fmt.Sprintf("%s.%s", path, ext)
+
+		if fileExists(newPath) {
 			return ext, nil
 		}
 	}
