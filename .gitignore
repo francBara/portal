@@ -2,6 +2,6 @@ variables.json
 config.json
 .env
 users.json
-component-preview
+component-preview/src
 app-preview
 node_modules
