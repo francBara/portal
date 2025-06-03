@@ -36,6 +36,8 @@ func BuildComponentPage(componentFilePath string) error {
 		return err
 	}
 
+	//TODO: Load .env files
+
 	slog.Info("Built component preview")
 
 	return nil
@@ -59,7 +61,7 @@ root.render(
 );
 `, componentName, relPath, componentName)
 
-	return os.WriteFile("component-preview/src/index.js", []byte(fileContent), os.ModePerm)
+	return os.WriteFile("component-preview/src/index.jsx", []byte(fileContent), os.ModePerm)
 }
 
 func handleDependencies(componentFilePath string, visited map[string]struct{}) error {
