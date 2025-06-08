@@ -69,14 +69,14 @@ func seekExtension(path string, extensions []string) (foundExtension string, err
 	return "", errors.New("no file found for " + path)
 }
 
-func seekFiles(paths []string) (path string, err error) {
+func seekFiles(paths []string) (path string) {
 	for _, path := range paths {
 		prefixedPath := fmt.Sprintf("%s/%s", github.RepoFolderName, path)
 
 		if fileExists(prefixedPath) {
-			return prefixedPath, nil
+			return prefixedPath
 		}
 	}
 
-	return "", errors.New("no file found")
+	return ""
 }

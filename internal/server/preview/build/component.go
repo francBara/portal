@@ -27,39 +27,54 @@ func BuildComponentPage(componentFilePath string) error {
 		}
 	}
 
-	componentName, err := mockComponent(componentFilePath)
+	component, err := scanComponent(componentFilePath)
 	if err != nil {
 		return err
 	}
 
-	if err = makeEntryPoint(componentName, componentFilePath); err != nil {
+	if err = makeEntryPoint(component, componentFilePath); err != nil {
 		return err
 	}
 
-	//TODO: Load .env files
+	envPath := seekFiles([]string{".env", ".env.test", ".env.dev", ".env.prod"})
+	if envPath != "" {
+		envFile := filepath.Base(envPath)
+
+		slog.Info(fmt.Sprintf("Copying %s into component-preview", envFile))
+		copyFile(envPath, filepath.Join("component-preview", envFile))
+	}
 
 	slog.Info("Built component preview")
 
 	return nil
 }
 
-func makeEntryPoint(componentName string, componentFilePath string) error {
+func makeEntryPoint(component componentMock, componentFilePath string) error {
 	relPath, err := filepath.Rel("component-preview/src", filepath.Join("component-preview/src/components", componentFilePath))
 	if err != nil {
 		return err
+	}
+
+	variableDeclarations := ""
+	componentProps := ""
+
+	for name, value := range component.Mock {
+		variableDeclarations += fmt.Sprintf("const %s = JSON.parse(%s);\n", name, value)
+		componentProps += fmt.Sprintf("%s={%s}", name, name)
 	}
 
 	fileContent := fmt.Sprintf(`import React from 'react';
 import ReactDOM from 'react-dom/client';
 import %s from './%s';
 
+%s
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
 	<React.StrictMode>
-		<%s />
+		<%s %s/>
 	</React.StrictMode>
 );
-`, componentName, relPath, componentName)
+`, component.ComponentName, relPath, variableDeclarations, component.ComponentName, componentProps)
 
 	return os.WriteFile("component-preview/src/index.jsx", []byte(fileContent), os.ModePerm)
 }
@@ -142,26 +157,29 @@ func handleDependencies(componentFilePath string, visited map[string]struct{}) e
 	return nil
 }
 
-func mockComponent(componentFilePath string) (componentName string, err error) {
+type componentMock struct {
+	ComponentName string         `json:"componentName"`
+	Mock          map[string]any `json:"mock"`
+}
+
+func scanComponent(componentFilePath string) (mock componentMock, err error) {
 	file, err := os.ReadFile(filepath.Join(github.RepoFolderName, componentFilePath))
 	if err != nil {
-		return "", err
+		return componentMock{}, err
 	}
 
-	out, err := shared.ExecuteTool("mockComponentPreview", map[string]any{
+	out, err := shared.ExecuteTool("scanComponentPreview", map[string]any{
 		"sourceCode": string(file),
 	})
 	if err != nil {
-		return "", err
+		return componentMock{}, err
 	}
 
-	var result struct {
-		ComponentName string `json:"componentName"`
-	}
+	var result componentMock
 
 	if err = json.NewDecoder(&out).Decode(&result); err != nil {
-		return "", err
+		return componentMock{}, err
 	}
 
-	return result.ComponentName, nil
+	return result, nil
 }

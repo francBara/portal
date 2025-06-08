@@ -18,10 +18,15 @@ process.stdin.on("end", () => {
     traverse(ast, {
         FunctionDeclaration(path) {
             if (path.node.leadingComments) {
-                for (let comment of path.node.leadingComments) {
-                    if (comment.value.trim().startsWith("@portal")) {
+                for (let leadingComment of path.node.leadingComments) {
+                    comment = leadingComment.value.trim();
+                    
+                    if (comment.startsWith("@portal")) {
                         result.componentName = path.node.id.name;
+                        result.mock = comment.replace(/^(@portal)/, "");
                     }
+
+                    break;
                 }
             }
         }
