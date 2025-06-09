@@ -19,6 +19,15 @@ process.stdin.on("end", () => {
         ImportDeclaration(path) {
             result.imports.push(path.node.source.value);
         },
+        CallExpression(path) {
+            const callee = path.get("callee");
+            if (callee.isIdentifier({ name: "require" })) {
+              const arg = path.get("arguments")[0];
+              if (arg.isStringLiteral()) {
+                result.imports.push(arg.node.value);
+              }
+            }
+          },
     });
 
     console.log(JSON.stringify(result));

@@ -23,7 +23,7 @@ process.stdin.on("end", () => {
                     
                     if (comment.startsWith("@portal")) {
                         result.componentName = path.node.id.name;
-                        result.mock = comment.replace(/^(@portal)/, "");
+                        result.mock = JSON.parse(comment.replace(/^(@portal)/, ""));
                     }
 
                     break;

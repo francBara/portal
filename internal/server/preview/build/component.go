@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"portal/internal/server/github"
 	"portal/shared"
@@ -20,11 +19,8 @@ func BuildComponentPage(componentFilePath string) error {
 
 	visitedImports := make(map[string]struct{})
 
-	if true {
-		err = handleDependencies(componentFilePath, visitedImports)
-		if err != nil {
-			return err
-		}
+	if err = handleDependencies(componentFilePath, visitedImports); err != nil {
+		return err
 	}
 
 	component, err := scanComponent(componentFilePath)
@@ -36,12 +32,31 @@ func BuildComponentPage(componentFilePath string) error {
 		return err
 	}
 
-	envPath := seekFiles([]string{".env", ".env.test", ".env.dev", ".env.prod"})
+	// Env files
+	envPath := seekFiles([]string{".env.test", ".env.dev", ".env.prod"})
 	if envPath != "" {
 		envFile := filepath.Base(envPath)
 
 		slog.Info(fmt.Sprintf("Copying %s into component-preview", envFile))
 		copyFile(envPath, filepath.Join("component-preview", envFile))
+	}
+
+	// Configuration files
+	for _, fileName := range []string{"tailwind.config.js", "postcss.config.mjs", "tailwind.config.mjs", "postcss.config.js"} {
+		imports, err := getComponentImports(fileName)
+		if err != nil {
+			return err
+		}
+
+		for _, importPath := range imports {
+			if importPath[0] != '@' {
+				importPath = strings.Split(importPath, "/")[0]
+			}
+			slog.Info("Installing package " + importPath)
+			installPackage(importPath)
+		}
+
+		copyFile(filepath.Join(github.RepoFolderName, fileName), filepath.Join("component-preview", fileName))
 	}
 
 	slog.Info("Built component preview")
@@ -59,24 +74,41 @@ func makeEntryPoint(component componentMock, componentFilePath string) error {
 	componentProps := ""
 
 	for name, value := range component.Mock {
-		variableDeclarations += fmt.Sprintf("const %s = JSON.parse(%s);\n", name, value)
-		componentProps += fmt.Sprintf("%s={%s}", name, name)
+		marshaledValue, err := json.Marshal(value)
+		if err != nil {
+			return err
+		}
+
+		variableDeclarations += fmt.Sprintf("const %s = %s;\n", name, string(marshaledValue))
+		componentProps += fmt.Sprintf("%s={%s} ", name, name)
 	}
 
 	fileContent := fmt.Sprintf(`import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import "./index.css";
 import %s from './%s';
 
 %s
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
 	<React.StrictMode>
-		<%s %s/>
+		<BrowserRouter>
+			<div className="min-h-screen flex items-center justify-center">
+				<div className="h-200 w-64">
+					<%s %s/>
+				</div>
+			</div>
+		</BrowserRouter>
 	</React.StrictMode>
 );
 `, component.ComponentName, relPath, variableDeclarations, component.ComponentName, componentProps)
 
-	return os.WriteFile("component-preview/src/index.jsx", []byte(fileContent), os.ModePerm)
+	if err = os.WriteFile("component-preview/src/index.jsx", []byte(fileContent), os.ModePerm); err != nil {
+		return err
+	}
+	return os.WriteFile("component-preview/src/index.css", []byte("@tailwind base;\n@tailwind components;\n@tailwind utilities;\n"), os.ModePerm)
+
 }
 
 func handleDependencies(componentFilePath string, visited map[string]struct{}) error {
@@ -88,43 +120,32 @@ func handleDependencies(componentFilePath string, visited map[string]struct{}) e
 
 	visited[componentFilePath] = struct{}{}
 
-	file, err := os.ReadFile(filepath.Join(github.RepoFolderName, componentFilePath))
+	if err := os.MkdirAll(filepath.Join("component-preview/src/components", filepath.Dir(componentFilePath)), 0755); err != nil {
+		return err
+	}
+	if err := copyFile(filepath.Join(github.RepoFolderName, componentFilePath), filepath.Join("component-preview/src/components", componentFilePath)); err != nil {
+		return err
+	}
+
+	imports, err := getComponentImports(componentFilePath)
 	if err != nil {
 		return err
 	}
 
-	out, err := shared.ExecuteTool("getComponentImports", map[string]any{
-		"sourceCode": string(file),
-	})
-	if err != nil {
-		return err
-	}
-
-	var result struct {
-		Imports []string `json:"imports"`
-	}
-
-	if err = json.NewDecoder(&out).Decode(&result); err != nil {
-		return err
-	}
-
-	if err = os.MkdirAll(filepath.Join("component-preview/src/components", filepath.Dir(componentFilePath)), 0755); err != nil {
-		return err
-	}
-	if err = copyFile(filepath.Join(github.RepoFolderName, componentFilePath), filepath.Join("component-preview/src/components", componentFilePath)); err != nil {
-		return err
-	}
-
-	for _, importPath := range result.Imports {
+	for _, importPath := range imports {
 		if importPath[0] == '.' {
 			// Other imports
 			importedFilePath := filepath.Join(filepath.Dir(componentFilePath), importPath)
-			fileExt, err := seekExtension(filepath.Join(github.RepoFolderName, importedFilePath), []string{"", "jsx", "tsx", "js", "ts"})
+			fileExt, err := seekExtension(filepath.Join(github.RepoFolderName, importedFilePath), []string{"jsx", "tsx", "js", "ts"})
 			if err != nil {
-				return err
+				return fmt.Errorf("seekExtension for %s: %w", importedFilePath, err)
 			}
 
-			if err = handleDependencies(importedFilePath+"."+fileExt, visited); err != nil {
+			if fileExt != "" {
+				importedFilePath += "." + fileExt
+			}
+
+			if err = handleDependencies(importedFilePath, visited); err != nil {
 				return err
 			}
 		} else {
@@ -139,15 +160,8 @@ func handleDependencies(componentFilePath string, visited map[string]struct{}) e
 			visited[importPath] = struct{}{}
 
 			slog.Info("Installing package " + importPath)
-
 			// Packages
-			cmd := exec.Command("npm", "install", importPath)
-
-			cmd.Dir = "component-preview"
-			//cmd.Stdout = os.Stdout
-			cmd.Stderr = os.Stderr
-
-			err := cmd.Run()
+			err := installPackage(importPath)
 			if err != nil {
 				return err
 			}
