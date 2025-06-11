@@ -53,7 +53,6 @@ func installPackage(importPath string) error {
 	cmd := exec.Command("npm", "install", importPath)
 
 	cmd.Dir = "component-preview"
-	//cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
 	return cmd.Run()

@@ -4,6 +4,8 @@ component-preview/.env*
 component-preview/postcss*
 component-preview/tailwind*
 component-preview/src
+component-preview/package.json
+component-preview/package-lock.json
 
 app-preview
 node_modules

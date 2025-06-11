@@ -11,6 +11,7 @@ import (
 	"portal/internal/server/controllers"
 	"portal/internal/server/github"
 	"portal/internal/server/preview"
+	"portal/internal/server/preview/build"
 	"portal/internal/server/utils"
 	"strconv"
 
@@ -27,6 +28,8 @@ func RunServer(port int) {
 	if err != nil {
 		slog.Error("Error initializing github client", "error", err.Error())
 	}
+
+	fmt.Println(build.BuildComponentPage("./src/Components/Atoms/Card/CardPublic.tsx"))
 
 	utils.LoadVariables()
 

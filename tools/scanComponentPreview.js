@@ -22,9 +22,13 @@ process.stdin.on("end", () => {
                     comment = leadingComment.value.trim();
                     
                     //TODO: Support whitespaces, make better regex
+                    //TODO: Check that all props are mocked
                     if (comment.startsWith("@portal")) {
                         result.componentName = path.node.id.name;
-                        result.mock = JSON.parse(comment.replace(/^(@portal)/, ""));
+
+                        const mock = comment.replace(/^(@portal)/, "");
+
+                        result.mock = JSON.parse(mock);
                     }
 
                     break;
