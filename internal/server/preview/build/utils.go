@@ -11,7 +11,7 @@ import (
 )
 
 func getComponentImports(componentFilePath string) (imports []string, err error) {
-	fileExtensions := []string{"js", "ts", "jsx", "tsx"}
+	fileExtensions := []string{"js", "ts", "jsx", "tsx", "mjs"}
 
 	isValid := false
 

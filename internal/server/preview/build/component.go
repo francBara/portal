@@ -2,6 +2,7 @@ package build
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -19,12 +20,12 @@ func BuildComponentPage(componentFilePath string) error {
 
 	visitedImports := make(map[string]struct{})
 
-	if err = handleDependencies(componentFilePath, visitedImports); err != nil {
+	component, err := scanComponent(componentFilePath)
+	if err != nil {
 		return err
 	}
 
-	component, err := scanComponent(componentFilePath)
-	if err != nil {
+	if err = handleDependencies(componentFilePath, visitedImports); err != nil {
 		return err
 	}
 
@@ -43,6 +44,10 @@ func BuildComponentPage(componentFilePath string) error {
 
 	// Configuration files
 	for _, fileName := range []string{"tailwind.config.js", "postcss.config.mjs", "tailwind.config.mjs", "postcss.config.js"} {
+		if !fileExists(filepath.Join(github.RepoFolderName, fileName)) {
+			continue
+		}
+
 		imports, err := getComponentImports(fileName)
 		if err != nil {
 			return err
@@ -193,6 +198,10 @@ func scanComponent(componentFilePath string) (mock componentMock, err error) {
 
 	if err = json.NewDecoder(&out).Decode(&result); err != nil {
 		return componentMock{}, err
+	}
+
+	if result.ComponentName == "" {
+		return componentMock{}, errors.New("no portal component found")
 	}
 
 	return result, nil

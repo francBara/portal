@@ -1,7 +1,9 @@
-variables.json
-config.json
 .env
-users.json
+
+component-preview/.env*
+component-preview/postcss*
+component-preview/tailwind*
 component-preview/src
+
 app-preview
 node_modules

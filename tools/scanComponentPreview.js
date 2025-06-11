@@ -21,6 +21,7 @@ process.stdin.on("end", () => {
                 for (let leadingComment of path.node.leadingComments) {
                     comment = leadingComment.value.trim();
                     
+                    //TODO: Support whitespaces, make better regex
                     if (comment.startsWith("@portal")) {
                         result.componentName = path.node.id.name;
                         result.mock = JSON.parse(comment.replace(/^(@portal)/, ""));
