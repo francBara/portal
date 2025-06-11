@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"portal/internal/server/github"
 )
 
@@ -31,32 +30,12 @@ func copyFile(src string, dst string) error {
 	return err
 }
 
-func copyDir(src string, dst string) error {
-	return filepath.WalkDir(src, func(path string, d os.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
-		relPath, err := filepath.Rel(src, path)
-		if err != nil {
-			return err
-		}
-
-		targetPath := filepath.Join(dst, relPath)
-
-		if d.IsDir() {
-			return os.MkdirAll(targetPath, 0755)
-		}
-
-		return copyFile(path, targetPath)
-	})
-}
-
 func fileExists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil || !os.IsNotExist(err)
 }
 
+// seekExtension returns the file extension of the file in path, given some possible extensions.
 func seekExtension(path string, extensions []string) (foundExtension string, err error) {
 	if fileExists(path) {
 		return "", nil
@@ -73,6 +52,7 @@ func seekExtension(path string, extensions []string) (foundExtension string, err
 	return "", errors.New("no file found for " + path)
 }
 
+// seekFiles looks for the given filepaths inside cloned project folder, returns the absolute path relative to the first found.
 func seekFiles(paths []string) (path string) {
 	for _, path := range paths {
 		prefixedPath := fmt.Sprintf("%s/%s", github.RepoFolderName, path)

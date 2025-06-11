@@ -11,7 +11,10 @@ import (
 	"strings"
 )
 
+// handleDependencies copies the component located at componentFilePath to its corresponding location in component-preview,
+// then calls handleDependencies on its internal dependencies, and installs external dependencies.
 func handleDependencies(componentFilePath string, visited map[string]struct{}) error {
+	// Avoids cycles
 	if _, ok := visited[componentFilePath]; ok {
 		return nil
 	}
@@ -34,7 +37,7 @@ func handleDependencies(componentFilePath string, visited map[string]struct{}) e
 
 	for _, importPath := range imports {
 		if importPath[0] == '.' {
-			// Other imports
+			// Internal dependencies
 			importedFilePath := filepath.Join(filepath.Dir(componentFilePath), importPath)
 			fileExt, err := seekExtension(filepath.Join(github.RepoFolderName, importedFilePath), []string{"jsx", "tsx", "js", "ts"})
 			if err != nil {
@@ -49,6 +52,7 @@ func handleDependencies(componentFilePath string, visited map[string]struct{}) e
 				return err
 			}
 		} else {
+			// External dependencies
 			if importPath[0] != '@' {
 				importPath = strings.Split(importPath, "/")[0]
 			}
@@ -60,9 +64,8 @@ func handleDependencies(componentFilePath string, visited map[string]struct{}) e
 			visited[importPath] = struct{}{}
 
 			slog.Info("Installing package " + importPath)
-			// Packages
-			err := installPackage(importPath)
-			if err != nil {
+
+			if err = installPackage(importPath); err != nil {
 				return err
 			}
 		}
@@ -71,7 +74,9 @@ func handleDependencies(componentFilePath string, visited map[string]struct{}) e
 	return nil
 }
 
+// handleDevDependencies install necessary dev dependencies, applying the project versions if present.
 func handleDevDependencies() error {
+	// Get project dev dependencies
 	var projectPackage struct {
 		DevDependencies map[string]string `json:"devDependencies"`
 	}
@@ -85,6 +90,7 @@ func handleDevDependencies() error {
 		return err
 	}
 
+	// Necessary
 	devDependencies := map[string]string{
 		"postcss":              "",
 		"autoprefixer":         "",

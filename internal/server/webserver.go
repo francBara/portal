@@ -11,7 +11,6 @@ import (
 	"portal/internal/server/controllers"
 	"portal/internal/server/github"
 	"portal/internal/server/preview"
-	"portal/internal/server/preview/build"
 	"portal/internal/server/utils"
 	"strconv"
 
@@ -29,13 +28,7 @@ func RunServer(port int) {
 		slog.Error("Error initializing github client", "error", err.Error())
 	}
 
-	fmt.Println(build.BuildComponentPage("./src/Components/Atoms/Card/CardPublic.tsx"))
-
 	utils.LoadVariables()
-
-	if github.GithubClient != nil && configs.ServePreview {
-		go preview.ServePreview()
-	}
 
 	r := chi.NewRouter()
 
@@ -64,7 +57,6 @@ func RunServer(port int) {
 
 			secureApi.Get("/preview/status", preview.GetPreviewStatus(configs.ServePreview))
 			secureApi.Post("/preview/build", preview.BuildComponentPreview())
-			secureApi.Post("/preview/highlight", preview.HighlightComponent())
 
 			// Updates the preview with new variables
 			secureApi.Post("/preview/update", preview.UpdatePreview())

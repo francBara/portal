@@ -10,6 +10,7 @@ import (
 	"strings"
 )
 
+// getComponentImports returns the imported dependencies imported (internal and external) from the file located at componentFilePath inside the cloned project.
 func getComponentImports(componentFilePath string) (imports []string, err error) {
 	fileExtensions := []string{"js", "ts", "jsx", "tsx", "mjs"}
 
@@ -49,6 +50,7 @@ func getComponentImports(componentFilePath string) (imports []string, err error)
 	return result.Imports, nil
 }
 
+// installPackage runs npm install on the given dependency.
 func installPackage(importPath string) error {
 	cmd := exec.Command("npm", "install", importPath)
 

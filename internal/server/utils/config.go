@@ -20,6 +20,8 @@ type PatcherConfigs struct {
 }
 
 func (config PatcherConfigs) Print() {
+	config.Pac = "[REDACTED]"
+
 	jsonConfigs, err := json.MarshalIndent(config, "", "  ")
 	if err != nil {
 		slog.Error("Could not print config")
