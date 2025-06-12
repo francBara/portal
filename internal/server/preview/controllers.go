@@ -9,8 +9,15 @@ import (
 	"portal/shared"
 )
 
+var currentComponentPath string
+
 func UpdatePreview() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if currentComponentPath == "" {
+			http.Error(w, "No component was selected", http.StatusBadRequest)
+			return
+		}
+
 		varsUpdate, err := shared.JsonToVariablesMap(r.Body)
 		if err != nil {
 			http.Error(w, "Invalid JSON", http.StatusBadRequest)
@@ -30,51 +37,9 @@ func UpdatePreview() func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = patchPreview(newVariables)
+		err = patchPreview(currentComponentPath, newVariables[currentComponentPath])
 		if err != nil {
-			http.Error(w, "Could not update preview", http.StatusInternalServerError)
-			return
-		}
-	}
-}
-
-type highlightComponentPayload struct {
-	FilePath   string `json:"filePath"`
-	UIVariable string `json:"varName"`
-	NodeId     int    `json:"nodeId"`
-}
-
-func HighlightComponent() func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var payload highlightComponentPayload
-
-		decoder := json.NewDecoder(r.Body)
-
-		err := decoder.Decode(&payload)
-		if err != nil {
-			http.Error(w, "Invalid payload", http.StatusBadRequest)
-			return
-		}
-
-		variables, err := utils.LoadVariables()
-		if err != nil {
-			http.Error(w, "Could not load variables", http.StatusInternalServerError)
-			return
-		}
-
-		uiVar := variables[payload.FilePath].UI[payload.UIVariable]
-
-		uiVar.HighlightedNode = payload.NodeId
-
-		if fileVars, ok := variables[payload.FilePath]; ok {
-			fileVars.UI[payload.UIVariable] = uiVar
-		} else {
-			http.Error(w, "File not found", http.StatusBadRequest)
-			return
-		}
-
-		err = patchPreview(variables)
-		if err != nil {
+			slog.Error(err.Error())
 			http.Error(w, "Could not update preview", http.StatusInternalServerError)
 			return
 		}
@@ -95,12 +60,16 @@ func BuildComponentPreview() func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		currentComponentPath = payload.FilePath
+
 		err = build.BuildComponentPage(payload.FilePath)
 		if err != nil {
 			slog.Error(err.Error())
 			http.Error(w, "Could not build component preview", http.StatusInternalServerError)
 			return
 		}
+
+		go ServePreview()
 	}
 }
 

@@ -9,7 +9,13 @@ function updateNode(node, newValue, highlightedNode) {
     for (let attr of node.openingElement.attributes) {
         if (t.isJSXAttribute(attr) && t.isJSXIdentifier(attr.name) && attr.name.name === "className") {
             if (t.isStringLiteral(attr.value)) {
-                attr.value.value = parseTailwind(newValue.properties, newValue.id === highlightedNode);
+                newTwString = parseTailwind(newValue.properties, newValue.id === highlightedNode);
+
+                if (newTwString !== attr.value.value) {
+                    console.error("New line: " + newTwString);
+                }
+
+                attr.value.value = newTwString;
             }
             else if (t.isJSXExpressionContainer(attr.value) && t.isTemplateLiteral(attr.value.expression)) {
                 //TODO: Implement expression container parsing

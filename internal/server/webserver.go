@@ -56,6 +56,8 @@ func RunServer(port int) {
 			secureApi.Post("/patch", controllers.PushChanges(configs))
 
 			secureApi.Get("/preview/status", preview.GetPreviewStatus(configs.ServePreview))
+
+			// Builds and serves a single component preview
 			secureApi.Post("/preview/build", preview.BuildComponentPreview())
 
 			// Updates the preview with new variables

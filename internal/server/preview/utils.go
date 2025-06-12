@@ -1,32 +1,24 @@
 package preview
 
 import (
-	"fmt"
 	"os"
+	"path/filepath"
 	"portal/internal/patcher"
-	"portal/internal/server/github"
 	"portal/shared"
 )
 
-func patchPreview(variables shared.PortalVariables) error {
-	for filePath, fileVars := range variables {
-		globalFilePath := fmt.Sprintf("%s/%s", github.RepoFolderName, filePath)
+func patchPreview(filePath string, variables shared.FileVariables) error {
+	globalFilePath := filepath.Join("component-preview/src/components", filePath)
 
-		rawFile, err := os.ReadFile(globalFilePath)
-		if err != nil {
-			return err
-		}
-
-		newContent, err := patcher.PatchFile(string(rawFile), fileVars)
-		if err != nil {
-			return err
-		}
-
-		err = os.WriteFile(globalFilePath, []byte(newContent), 0644)
-		if err != nil {
-			panic(err)
-		}
+	rawFile, err := os.ReadFile(globalFilePath)
+	if err != nil {
+		return err
 	}
 
-	return nil
+	newContent, err := patcher.PatchFile(string(rawFile), variables)
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(globalFilePath, []byte(newContent), 0644)
 }

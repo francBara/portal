@@ -7,28 +7,15 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
-	"portal/internal/server/github"
 )
 
-// installPackages calls "npm install" on the cloned repo.
-func installPackages() error {
-	cmd := exec.Command("npm", "install")
-
-	cmd.Dir = github.RepoFolderName
-
-	err := cmd.Run()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
+var previewRunning bool
 
 // startDevServer calls vite on the cloned repo, serving a development server.
 func startDevServer() {
-	cmd := exec.Command("vite", "--port", "3001", "--mode", "test")
+	cmd := exec.Command("npx", "vite", "--port", "3001", "--mode", "test")
 
-	cmd.Dir = github.RepoFolderName
+	cmd.Dir = "component-preview"
 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -42,10 +29,7 @@ func startDevServer() {
 
 // ServePreview sets up the repo for a local dev server, starts the dev server and proxies it.
 func ServePreview() {
-	slog.Info("executing npm install...")
-	err := installPackages()
-	if err != nil {
-		slog.Error("npm install", "error", err.Error())
+	if previewRunning {
 		return
 	}
 
@@ -65,9 +49,13 @@ func ServePreview() {
 		proxy.ServeHTTP(w, r)
 	})
 
+	previewRunning = true
+
 	slog.Info("Preview proxy ready")
 
 	if err := http.ListenAndServe(":3000", nil); err != nil {
 		slog.Error("preview proxy", "error", err.Error())
 	}
+
+	previewRunning = false
 }
