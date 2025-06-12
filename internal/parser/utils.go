@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"portal/shared"
 	"regexp"
 	"strconv"
@@ -103,8 +104,7 @@ func (arguments portalArguments) getPortalVariable(name string, filePath string)
 
 	view := arguments.getString("view")
 	if view == "" {
-		splitFilePath := strings.Split(filePath, "/")
-		view = splitFilePath[len(splitFilePath)-1]
+		view = strings.Split(filepath.Base(filePath), ".")[0]
 	}
 
 	return shared.PortalVariable{
