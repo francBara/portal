@@ -55,8 +55,6 @@ func RunServer(port int) {
 			// Applies the update to the remote repo
 			secureApi.Post("/patch", controllers.PushChanges(configs))
 
-			secureApi.Get("/preview/status", preview.GetPreviewStatus(configs.ServePreview))
-
 			// Builds and serves a single component preview
 			secureApi.Post("/preview/build", preview.BuildComponentPreview())
 

@@ -60,6 +60,11 @@ func BuildComponentPreview() func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		if payload.FilePath == "" {
+			http.Error(w, "empty component file path", http.StatusBadRequest)
+			return
+		}
+
 		currentComponentPath = payload.FilePath
 
 		err = build.BuildComponentPage(payload.FilePath)
