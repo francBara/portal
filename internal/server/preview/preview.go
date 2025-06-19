@@ -7,9 +7,12 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"sync"
 )
 
 var previewRunning bool
+
+var mutex sync.Mutex
 
 // startDevServer calls vite on the cloned repo, serving a development server.
 func startDevServer() {
@@ -32,6 +35,9 @@ func ServePreview() {
 	if previewRunning {
 		return
 	}
+
+	mutex.Lock()
+	defer mutex.Unlock()
 
 	slog.Info("starting vite dev server...")
 	go startDevServer()
