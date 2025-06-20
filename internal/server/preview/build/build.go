@@ -5,8 +5,6 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
-	"portal/internal/server/github"
-	"strings"
 	"sync"
 )
 
@@ -57,24 +55,28 @@ func BuildComponentPage(componentFilePath string) error {
 
 	// Configuration files
 	for _, fileName := range []string{"tailwind.config.js", "postcss.config.mjs", "tailwind.config.mjs", "postcss.config.js"} {
-		if !fileExists(filepath.Join(github.RepoFolderName, fileName)) {
-			continue
-		}
-
-		imports, err := getComponentImports(fileName)
+		_, err = importConfigFile(fileName)
 		if err != nil {
 			return err
 		}
+	}
 
-		for _, importPath := range imports {
-			if importPath[0] != '@' {
-				importPath = strings.Split(importPath, "/")[0]
-			}
-			slog.Info("Installing package " + importPath)
-			installPackage(importPath)
+	viteConfigImported := false
+
+	for _, fileName := range []string{"vite.config.mts", "vite.config.js"} {
+		viteConfigImported, err = importConfigFile(fileName)
+		if err != nil {
+			return err
 		}
+		if viteConfigImported {
+			break
+		}
+	}
 
-		copyFile(filepath.Join(github.RepoFolderName, fileName), filepath.Join("component-preview", fileName))
+	if !viteConfigImported {
+		if err = makeViteConfig(); err != nil {
+			return err
+		}
 	}
 
 	if err = handleDevDependencies(); err != nil {

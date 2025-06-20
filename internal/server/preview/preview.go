@@ -1,6 +1,7 @@
 package preview
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 	"net/http/httputil"
@@ -8,15 +9,25 @@ import (
 	"os"
 	"os/exec"
 	"sync"
+	"time"
 )
 
-var previewRunning bool
+var proxyRunning bool
+var proxyMutex sync.Mutex
 
-var mutex sync.Mutex
+var devServerMutex sync.Mutex
+var cancelFunction context.CancelFunc
 
 // startDevServer calls vite on the cloned repo, serving a development server.
 func startDevServer() {
-	cmd := exec.Command("npx", "vite", "--port", "3001", "--mode", "test")
+	devServerMutex.Lock()
+	defer devServerMutex.Unlock()
+
+	var ctx context.Context
+
+	ctx, cancelFunction = context.WithCancel(context.Background())
+
+	cmd := exec.CommandContext(ctx, "npx", "vite", "--port", "3001", "--mode", "test")
 
 	cmd.Dir = "component-preview"
 
@@ -24,23 +35,16 @@ func startDevServer() {
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
 
-	err := cmd.Run()
-	if err != nil {
-		panic("error running vite server: " + err.Error())
-	}
+	cmd.Run()
+
+	cancelFunction = nil
 }
 
-// ServePreview sets up the repo for a local dev server, starts the dev server and proxies it.
-func ServePreview() {
-	if previewRunning {
-		return
-	}
+func serveProxy() {
+	proxyMutex.Lock()
+	defer proxyMutex.Unlock()
 
-	mutex.Lock()
-	defer mutex.Unlock()
-
-	slog.Info("starting vite dev server...")
-	go startDevServer()
+	proxyRunning = true
 
 	target, _ := url.Parse("http://localhost:3001")
 	proxy := httputil.NewSingleHostReverseProxy(target)
@@ -55,13 +59,25 @@ func ServePreview() {
 		proxy.ServeHTTP(w, r)
 	})
 
-	previewRunning = true
-
 	slog.Info("Preview proxy ready")
 
 	if err := http.ListenAndServe(":3000", nil); err != nil {
 		slog.Error("preview proxy", "error", err.Error())
 	}
 
-	previewRunning = false
+	proxyRunning = false
+}
+
+// ServePreview sets up the repo for a local dev server, starts the dev server and proxies it.
+func ServePreview() {
+	if cancelFunction != nil {
+		cancelFunction()
+		time.Sleep(1 * time.Second)
+	}
+
+	go startDevServer()
+
+	if !proxyRunning {
+		go serveProxy()
+	}
 }

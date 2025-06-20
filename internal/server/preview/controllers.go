@@ -74,7 +74,7 @@ func BuildComponentPreview() func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		go ServePreview()
+		ServePreview()
 	}
 }
 
