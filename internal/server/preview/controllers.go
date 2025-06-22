@@ -7,6 +7,7 @@ import (
 	"portal/internal/server/preview/build"
 	"portal/internal/server/utils"
 	"portal/shared"
+	"sync"
 )
 
 var currentComponentPath string
@@ -50,8 +51,13 @@ type buildComponentPayload struct {
 	FilePath string `json:"filePath"`
 }
 
+var mutex sync.Mutex
+
 func BuildComponentPreview() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		mutex.Lock()
+		defer mutex.Unlock()
+
 		var payload buildComponentPayload
 
 		err := json.NewDecoder(r.Body).Decode(&payload)
@@ -65,7 +71,10 @@ func BuildComponentPreview() func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		currentComponentPath = payload.FilePath
+		if payload.FilePath == currentComponentPath {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
 
 		err = build.BuildComponentPage(payload.FilePath)
 		if err != nil {
@@ -75,6 +84,8 @@ func BuildComponentPreview() func(w http.ResponseWriter, r *http.Request) {
 		}
 
 		ServePreview()
+
+		currentComponentPath = payload.FilePath
 	}
 }
 

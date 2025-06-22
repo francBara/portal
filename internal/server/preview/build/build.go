@@ -5,21 +5,9 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
-	"sync"
 )
 
-var mutex sync.Mutex
-
-var lastBuilt string
-
 func BuildComponentPage(componentFilePath string) error {
-	mutex.Lock()
-	defer mutex.Unlock()
-
-	if componentFilePath == lastBuilt {
-		return nil
-	}
-
 	err := os.MkdirAll("component-preview/src/components", 0755)
 	if err != nil {
 		return err
@@ -98,8 +86,6 @@ func BuildComponentPage(componentFilePath string) error {
 	}
 
 	slog.Info("Built component preview")
-
-	lastBuilt = componentFilePath
 
 	return nil
 }
