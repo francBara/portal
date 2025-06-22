@@ -16,6 +16,23 @@ traverse(ast, {
     FunctionDeclaration(path) {
         const rootName = path.node.id.name;
 
+        if (!path.node.leadingComments) {
+            return;
+        }
+
+        let hasComment = false;
+
+        for (let comment of path.node.leadingComments) {
+            if (comment.value.trim().includes("@portal")) {
+                hasComment = true;
+                break;
+            }
+        }
+
+        if (!hasComment) {
+            return;
+        }
+
         for (let el of path.node.body.body) {
             if (t.isReturnStatement(el) && t.isJSXElement(el.argument)) {
                 components[rootName] = collectJSX(el.argument);
@@ -25,7 +42,7 @@ traverse(ast, {
     VariableDeclarator(path) {
         const rootName = path.node.id.name;
 
-        if (path.node.init && path.node.init.type === "ArrowFunctionExpression") {
+        if (path.node.init && path.node.init.type === "ArrowFunctionExpression" && path.node.init.body && path.node.init.body.body) {
             for (let el of path.node.init.body.body) {
                 if (t.isReturnStatement(el) && t.isJSXElement(el.argument)) {
                     components[rootName] = collectJSX(el.argument);

@@ -27,11 +27,16 @@ process.stdin.on("end", () => {
                         result.componentName = path.node.id.name;
 
                         const mock = comment.replace(/^(@portal)/, "");
+                        
+                        //TODO: Improve error handling, ignore mock when not present in the comment
+                        try {
+                            result.mock = JSON.parse(mock);
+                        } catch(e) {
 
-                        result.mock = JSON.parse(mock);
+                        }
+                        
+                        break;
                     }
-
-                    break;
                 }
             }
         }

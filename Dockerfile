@@ -21,6 +21,8 @@ RUN npm install
 RUN apk add --no-cache git
 
 COPY --from=builder /app/portal .
+COPY --from=builder /app/component-preview component-preview
+COPY --from=builder /app/.env .env
 COPY --from=builder /app/tools tools
 COPY --from=builder /app/static static
 

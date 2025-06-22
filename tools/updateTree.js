@@ -50,7 +50,7 @@ function parseTailwind(properties, isHighlighted) {
     }
 
     if (isHighlighted) {
-        tailwindString += "border-2 border-red-500";
+        tailwindString += "outline outline-2 outline-red-500 outline-offset-2";
     }
 
     return tailwindString.trim();
