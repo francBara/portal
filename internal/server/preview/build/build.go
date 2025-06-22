@@ -54,9 +54,10 @@ func BuildComponentPage(componentFilePath string) error {
 	}
 
 	viteConfigImported := false
+	var dependencies []string
 
 	for _, fileName := range []string{"vite.config.mts", "vite.config.js"} {
-		viteConfigImported, dependencies, err := importConfigFile(fileName)
+		viteConfigImported, dependencies, err = importConfigFile(fileName)
 		if err != nil {
 			return err
 		}
