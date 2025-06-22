@@ -10,6 +10,7 @@ component-preview/package
 component-preview/package*
 component-preview/vite*
 component-preview/yarn*
+component-preview/index.html
 
 app-preview
 node_modules

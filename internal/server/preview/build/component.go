@@ -12,9 +12,12 @@ import (
 
 type componentMock struct {
 	ComponentName string         `json:"componentName"`
+	BoxHeight     int            `json:"boxHeight"`
+	BoxWidth      int            `json:"boxWidth"`
 	Mock          map[string]any `json:"mock"`
 }
 
+// scanComponent returns the name of the annotated component at componentFilePath, and its mocked props.
 func scanComponent(componentFilePath string) (mock componentMock, err error) {
 	file, err := os.ReadFile(filepath.Join(github.RepoFolderName, componentFilePath))
 	if err != nil {
@@ -60,6 +63,19 @@ func makeEntryPoint(component componentMock, componentFilePath string) error {
 		componentProps += fmt.Sprintf("%s={%s} ", name, name)
 	}
 
+	boxString := ""
+
+	if component.BoxHeight != 0 {
+		boxString += fmt.Sprintf("h-%d ", component.BoxHeight)
+	} else {
+		boxString += "h-full "
+	}
+	if component.BoxWidth != 0 {
+		boxString += fmt.Sprintf("w-%d", component.BoxWidth)
+	} else {
+		boxString += "w-full"
+	}
+
 	fileContent := fmt.Sprintf(`import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
@@ -72,18 +88,30 @@ root.render(
 	<React.StrictMode>
 		<BrowserRouter>
 			<div className="min-h-screen flex items-center justify-center">
-				<div className="h-200 w-64">
+				<div className="%s">
 					<%s %s/>
 				</div>
 			</div>
 		</BrowserRouter>
 	</React.StrictMode>
 );
-`, component.ComponentName, relPath, variableDeclarations, component.ComponentName, componentProps)
+`, component.ComponentName, relPath, variableDeclarations, boxString, component.ComponentName, componentProps)
 
 	if err = os.WriteFile("component-preview/src/index.jsx", []byte(fileContent), os.ModePerm); err != nil {
 		return err
 	}
-	return os.WriteFile("component-preview/src/index.css", []byte("@tailwind base;\n@tailwind components;\n@tailwind utilities;\n"), os.ModePerm)
 
+	cssPath := seekFiles([]string{"index.css", "src/index.css"})
+
+	if cssPath == "" {
+		return os.WriteFile("component-preview/src/index.css", []byte("@tailwind base;\n@tailwind components;\n@tailwind utilities;\n"), os.ModePerm)
+	}
+
+	if err = copyFile(cssPath, "component-preview/src/index.css"); err != nil {
+		return err
+	}
+
+	indexPath := seekFiles([]string{"index.html", "src/index.html"})
+
+	return copyFile(indexPath, "component-preview/index.html")
 }
