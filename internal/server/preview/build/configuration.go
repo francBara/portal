@@ -1,37 +1,27 @@
 package build
 
 import (
-	"log/slog"
 	"os"
 	"path/filepath"
 	"portal/internal/server/github"
-	"strings"
 )
 
-func importConfigFile(filePath string) (imported bool, err error) {
+func importConfigFile(filePath string) (imported bool, dependencies []string, err error) {
 	if !fileExists(filepath.Join(github.RepoFolderName, filePath)) {
-		return false, nil
+		return false, []string{}, nil
 	}
 
-	imports, err := getComponentImports(filePath)
+	dependencies, err = getComponentImports(filePath)
 	if err != nil {
-		return false, err
-	}
-
-	for _, importPath := range imports {
-		if importPath[0] != '@' {
-			importPath = strings.Split(importPath, "/")[0]
-		}
-		slog.Info("Installing package " + importPath)
-		installPackage(importPath)
+		return false, []string{}, err
 	}
 
 	err = copyFile(filepath.Join(github.RepoFolderName, filePath), filepath.Join("component-preview", filePath))
 	if err != nil {
-		return false, err
+		return false, []string{}, err
 	}
 
-	return true, nil
+	return true, dependencies, nil
 }
 
 func makeViteConfig() error {

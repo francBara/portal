@@ -36,7 +36,8 @@ func BuildComponentPage(componentFilePath string) error {
 		return err
 	}
 
-	if err = handleDependencies(componentFilePath, visitedImports); err != nil {
+	externalDependencies, err := handleDependencies(componentFilePath, visitedImports)
+	if err != nil {
 		return err
 	}
 
@@ -55,18 +56,24 @@ func BuildComponentPage(componentFilePath string) error {
 
 	// Configuration files
 	for _, fileName := range []string{"tailwind.config.js", "postcss.config.mjs", "tailwind.config.mjs", "postcss.config.js"} {
-		_, err = importConfigFile(fileName)
+		_, dependencies, err := importConfigFile(fileName)
 		if err != nil {
 			return err
+		}
+		for _, dep := range dependencies {
+			externalDependencies[dep] = ""
 		}
 	}
 
 	viteConfigImported := false
 
 	for _, fileName := range []string{"vite.config.mts", "vite.config.js"} {
-		viteConfigImported, err = importConfigFile(fileName)
+		viteConfigImported, dependencies, err := importConfigFile(fileName)
 		if err != nil {
 			return err
+		}
+		for _, dep := range dependencies {
+			externalDependencies[dep] = ""
 		}
 		if viteConfigImported {
 			break
@@ -79,7 +86,14 @@ func BuildComponentPage(componentFilePath string) error {
 		}
 	}
 
-	if err = handleDevDependencies(); err != nil {
+	// Mandatory packages
+	for _, dep := range []string{"autoprefixer", "postcss", "tailwindcss", "vite", "react", "react-dom", "react-router-dom", "react-scripts"} {
+		externalDependencies[dep] = ""
+	}
+
+	applyVersions(externalDependencies)
+
+	if err = installAll(externalDependencies); err != nil {
 		return err
 	}
 
@@ -94,13 +108,7 @@ func makePackage() error {
 	return os.WriteFile("component-preview/package.json", []byte(`{
     "name": "component-preview",
     "version": "1.0.0",
-    "private": true,
-    "dependencies": {
-        "react": "^19.1.0",
-        "react-dom": "^19.1.0",
-        "react-router-dom": "^7.6.2",
-        "react-scripts": "5.0.1"
-    }
+    "private": true
 }
 `), os.ModePerm)
 }

@@ -2,6 +2,8 @@ package build
 
 import (
 	"encoding/json"
+	"fmt"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -12,7 +14,7 @@ import (
 
 // getComponentImports returns the imported dependencies imported (internal and external) from the file located at componentFilePath inside the cloned project.
 func getComponentImports(componentFilePath string) (imports []string, err error) {
-	fileExtensions := []string{"js", "ts", "jsx", "tsx", "mjs"}
+	fileExtensions := []string{"js", "ts", "jsx", "tsx", "mjs", "mts"}
 
 	isValid := false
 
@@ -47,15 +49,42 @@ func getComponentImports(componentFilePath string) (imports []string, err error)
 		return nil, err
 	}
 
+	for i := range result.Imports {
+		// External dependencies
+		if len(result.Imports[i]) > 0 && result.Imports[i][0] != '.' && result.Imports[i][0] != '@' {
+			result.Imports[i] = strings.Split(result.Imports[i], "/")[0]
+		}
+	}
+
 	return result.Imports, nil
 }
 
-// installPackage runs npm install on the given dependency.
-func installPackage(importPath string) error {
-	cmd := exec.Command("npm", "install", importPath)
+func installAll(dependencies map[string]string) error {
+	verDependencies := []string{}
+
+	for dep, version := range dependencies {
+		if version != "" {
+			verDependencies = append(verDependencies, fmt.Sprintf("%s@%s", dep, version))
+		} else {
+			verDependencies = append(verDependencies, dep)
+		}
+	}
+
+	cmd := exec.Command("yarn", append([]string{"add"}, verDependencies...)...)
+
+	for _, dep := range verDependencies {
+		slog.Info("installing package " + dep)
+	}
 
 	cmd.Dir = "component-preview"
-	cmd.Stderr = os.Stderr
+
+	if err := cmd.Run(); err != nil {
+		return err
+	}
+
+	cmd = exec.Command("yarn", "install")
+
+	cmd.Dir = "component-preview"
 
 	return cmd.Run()
 }

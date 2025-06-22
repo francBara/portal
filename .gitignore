@@ -1,5 +1,7 @@
 .env
 
+.vscode
+
 component-preview/.env*
 component-preview/postcss*
 component-preview/tailwind*
