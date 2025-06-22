@@ -2,7 +2,6 @@
 
 .vscode
 
-component-preview
-
 app-preview
+component-preview
 node_modules

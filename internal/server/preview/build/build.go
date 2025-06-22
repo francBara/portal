@@ -43,7 +43,7 @@ func BuildComponentPage(componentFilePath string) error {
 	}
 
 	// Configuration files
-	for _, fileName := range []string{"tailwind.config.js", "postcss.config.mjs", "tailwind.config.mjs", "postcss.config.js"} {
+	for _, fileName := range []string{"postcss.config.mjs", "postcss.config.js"} {
 		_, dependencies, err := importConfigFile(fileName)
 		if err != nil {
 			return err
@@ -53,17 +53,22 @@ func BuildComponentPage(componentFilePath string) error {
 		}
 	}
 
+	dependencies, err := importTailwindConfig()
+	if err != nil {
+		return err
+	}
+
 	viteConfigImported := false
-	var dependencies []string
 
 	for _, fileName := range []string{"vite.config.mts", "vite.config.js"} {
-		viteConfigImported, dependencies, err = importConfigFile(fileName)
+		var viteDependencies []string
+		viteConfigImported, viteDependencies, err = importConfigFile(fileName)
 		if err != nil {
 			return err
 		}
-		for _, dep := range dependencies {
-			externalDependencies[dep] = ""
-		}
+
+		dependencies = append(dependencies, viteDependencies...)
+
 		if viteConfigImported {
 			break
 		}
@@ -75,8 +80,8 @@ func BuildComponentPage(componentFilePath string) error {
 		}
 	}
 
-	// Mandatory packages
-	for _, dep := range []string{"autoprefixer", "postcss", "tailwindcss", "vite", "react", "react-dom", "react-router-dom", "react-scripts"} {
+	// Collect packages
+	for _, dep := range append(dependencies, []string{"autoprefixer", "postcss", "tailwindcss", "vite", "react", "react-dom", "react-router-dom", "react-scripts"}...) {
 		externalDependencies[dep] = ""
 	}
 

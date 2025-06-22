@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"portal/internal/server/github"
+	"portal/shared"
 )
 
 func importConfigFile(filePath string) (imported bool, dependencies []string, err error) {
@@ -22,6 +23,40 @@ func importConfigFile(filePath string) (imported bool, dependencies []string, er
 	}
 
 	return true, dependencies, nil
+}
+
+func importTailwindConfig() (dependencies []string, err error) {
+	var imported bool
+
+	for _, fileName := range []string{"tailwind.config.js", "tailwind.config.mjs"} {
+		imported, dependencies, err = importConfigFile(fileName)
+		if err != nil {
+			return []string{}, err
+		}
+
+		if imported {
+			rawContent, err := os.ReadFile(filepath.Join("component-preview", fileName))
+			if err != nil {
+				return []string{}, err
+			}
+
+			out, err := shared.ExecuteTool("addTailwindPath", map[string]string{
+				"sourceCode": string(rawContent),
+				"newPath":    "../app-preview/src/**/*.{js,jsx,ts,tsx}",
+			})
+			if err != nil {
+				return []string{}, err
+			}
+
+			if err = os.WriteFile(filepath.Join("component-preview", fileName), out.Bytes(), os.ModePerm); err != nil {
+				return []string{}, err
+			}
+
+			return dependencies, nil
+		}
+	}
+
+	return dependencies, nil
 }
 
 func makeViteConfig() error {
