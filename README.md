@@ -54,6 +54,38 @@ return (
 );
 ```
 
+### UI mocks
+You may want to mock certain component variables for correct preview rendering, like props or context.
+You can provide any javascript type or object as mock value.
+```js
+//@portal ui mock "dn309db2lc0r4bf82" false {gamesWon: 2, points: 200}
+function PlayerCard({uid, isPremium, stats}) {
+    //@portal mock {name: "Flipper", difficulty: "medium"}
+    const game = useGameStore(state => state.game);
+    ...
+}
+```
+
+If you have big objects, you can specify them in the mocks.json file.
+`mocks.json`
+```json
+{
+    "event": {
+        "name": "Together Raver",
+        "type": "Free party",
+        "maxGuests": 2000,
+        "dresscode": "Casual",
+    }
+}
+```
+
+```js
+//@portal ui mock event
+function EventData({eventData}) {
+    ...
+}
+```
+
 ## Server configuration
 
 The server can be configured via env variables.
