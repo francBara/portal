@@ -60,6 +60,9 @@ func RunServer(port int) {
 
 			// Updates the preview with new variables
 			secureApi.Post("/preview/update", preview.UpdatePreview())
+
+			// Highlights the given node in the preview
+			secureApi.Post("/preview/highlight", preview.HighlightNode())
 		})
 	})
 

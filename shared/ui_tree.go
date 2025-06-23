@@ -55,14 +55,3 @@ func (root1 UINode) isEqual(root2 UINode) bool {
 
 	return true
 }
-
-// GenerateIDs generates a unique incremental ID for every node of the tree
-func (root *UINode) GenerateIDs(rootId *int) {
-	root.Id = *rootId
-
-	*rootId++
-
-	for _, child := range root.Children {
-		child.GenerateIDs(rootId)
-	}
-}

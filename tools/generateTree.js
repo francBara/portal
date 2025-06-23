@@ -12,6 +12,8 @@ const ast = parser.parse(sourceCode, {
 
 const components = {};
 
+const rootIds = {};
+
 traverse(ast, {
     FunctionDeclaration(path) {
         const rootName = path.node.id.name;
@@ -35,7 +37,8 @@ traverse(ast, {
 
         for (let el of path.node.body.body) {
             if (t.isReturnStatement(el) && t.isJSXElement(el.argument)) {
-                components[rootName] = collectJSX(el.argument);
+                rootIds[rootName] = 0;
+                components[rootName] = collectJSX(el.argument, rootName);
             }
         }
     },
@@ -45,22 +48,26 @@ traverse(ast, {
         if (path.node.init && path.node.init.type === "ArrowFunctionExpression" && path.node.init.body && path.node.init.body.body) {
             for (let el of path.node.init.body.body) {
                 if (t.isReturnStatement(el) && t.isJSXElement(el.argument)) {
-                    components[rootName] = collectJSX(el.argument);
+                    rootIds[rootName] = 0;
+                    components[rootName] = collectJSX(el.argument, rootName);
                 }
             }
         }
     }
 });
 
-function collectJSX(node) {
+function collectJSX(node, rootName) {
     if (!t.isJSXElement(node)) return;
 
     const element = {
         type: node.openingElement.name.name || 'Unknown',
         row: node.openingElement.loc.start.line,
+        id: rootIds[rootName],
         properties: [],
         children: [],
     };
+
+    rootIds[rootName]++;
 
     node.openingElement.attributes.forEach(attr => {
         if (t.isJSXAttribute(attr) && t.isJSXIdentifier(attr.name) && attr.name.name === "className") {
@@ -78,7 +85,7 @@ function collectJSX(node) {
 
     node.children.forEach(child => {
         if (t.isJSXElement(child)) {
-            element.children.push(collectJSX(child));
+            element.children.push(collectJSX(child, rootName));
         } else if (t.isJSXText(child)) {
             const trimmed = child.value.trim();
             if (trimmed) {

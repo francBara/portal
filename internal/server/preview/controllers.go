@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"os"
+	"path/filepath"
 	"portal/internal/server/preview/build"
 	"portal/internal/server/utils"
 	"portal/shared"
@@ -89,15 +91,42 @@ func BuildComponentPreview() func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-type previewStatus struct {
-	IsPreviewAvailable bool `json:"isPreviewAvailable"`
+type highlightNodePayload struct {
+	FilePath string `json:"filePath"`
+	NodeId   int    `json:"nodeId"`
+	VarName  string `json:"varName"`
 }
 
-func GetPreviewStatus(isPreviewAvailable bool) func(w http.ResponseWriter, r *http.Request) {
+func HighlightNode() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(previewStatus{
-			IsPreviewAvailable: isPreviewAvailable,
+		mutex.Lock()
+		defer mutex.Unlock()
+
+		var payload highlightNodePayload
+
+		if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+			http.Error(w, "Invalid payload", http.StatusBadRequest)
+			return
+		}
+
+		rawContent, err := os.ReadFile(filepath.Join("component-preview/src/components", payload.FilePath))
+		if err != nil {
+			http.Error(w, "File not found", http.StatusBadRequest)
+			return
+		}
+
+		out, err := shared.ExecuteTool("highlightNode", map[string]any{
+			"sourceCode": string(rawContent),
+			"nodeId":     payload.NodeId,
+			"rootName":   payload.VarName,
 		})
+		if err != nil {
+			http.Error(w, "Could not highlight component", http.StatusInternalServerError)
+			return
+		}
+
+		if err = os.WriteFile(filepath.Join("component-preview/src/components", payload.FilePath), out.Bytes(), os.ModePerm); err != nil {
+			http.Error(w, "Could not update component", http.StatusInternalServerError)
+		}
 	}
 }
