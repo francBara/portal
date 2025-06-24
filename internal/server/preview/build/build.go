@@ -5,9 +5,10 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"portal/shared"
 )
 
-func BuildComponentPage(componentFilePath string) error {
+func BuildComponentPage(componentFilePath string, componentVar shared.UIVariable, mocks shared.PortalMocks) error {
 	err := os.MkdirAll("component-preview/src/components", 0755)
 	if err != nil {
 		return err
@@ -19,17 +20,12 @@ func BuildComponentPage(componentFilePath string) error {
 		return err
 	}
 
-	component, err := scanComponent(componentFilePath)
+	externalDependencies, err := handleDependencies(componentFilePath, mocks, visitedImports)
 	if err != nil {
 		return err
 	}
 
-	externalDependencies, err := handleDependencies(componentFilePath, visitedImports)
-	if err != nil {
-		return err
-	}
-
-	if err = makeEntryPoint(component, componentFilePath); err != nil {
+	if err = makeEntryPoint(componentVar, componentFilePath); err != nil {
 		return err
 	}
 

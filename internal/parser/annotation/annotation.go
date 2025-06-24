@@ -1,16 +1,56 @@
 package annotation
 
 import (
+	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
+	"portal/shared"
+	"regexp"
+	"strconv"
+	"strings"
 	"unicode"
 )
 
 type PortalAnnotation struct {
-	UI    bool
-	All   bool
-	Name  string
-	Group string
-	View  string
-	Mock  []string
+	UI          bool
+	All         bool
+	DisplayName string
+	Group       string
+	View        string
+	Max         int
+	Min         int
+	Step        int
+	Mocks       []string
+	Box         struct {
+		Height int
+		Width  int
+	}
+}
+
+// GetPortalVariable generates PortalVariable base data basing on arguments, name and filePath.
+func (ann PortalAnnotation) GetPortalVariable(name string, filePath string) shared.PortalVariable {
+	group := ann.Group
+	if group == "" {
+		group = "Default"
+	}
+
+	displayName := ann.DisplayName
+	if displayName == "" {
+		displayName = name
+	}
+
+	view := ann.View
+	if view == "" {
+		view = strings.Split(filepath.Base(filePath), ".")[0]
+	}
+
+	return shared.PortalVariable{
+		Name:        name,
+		DisplayName: displayName,
+		View:        view,
+		Group:       group,
+	}
 }
 
 func tokenizeAnnotation(annotationStr string) (tokens []string) {
@@ -66,14 +106,43 @@ func tokenizeAnnotation(annotationStr string) (tokens []string) {
 	return tokens
 }
 
-func parseTokens(tokens []string) (ann PortalAnnotation) {
+// TODO: Handle bad = assignments
+func parseTokens(tokens []string) (ann PortalAnnotation, err error) {
 	isMock := false
+	boxRe := regexp.MustCompile(`^(\d+|full)x(\d+|full)$`)
+
+	var savedMocks map[string]any
 
 	for i := 0; i < len(tokens); i++ {
 		if isMock {
-			ann.Mock = append(ann.Mock, tokens[i])
+			mockedValue := tokens[i]
+
+			if !unicode.IsDigit(rune(tokens[i][0])) && tokens[i][0] != '"' && tokens[i][0] != '{' {
+				if savedMocks == nil {
+					fileContent, err := os.ReadFile("mocks.json")
+					if err != nil {
+						return PortalAnnotation{}, fmt.Errorf("mocks.json does not exist, trying to find %s: %w", tokens[i], err)
+					}
+					if err = json.Unmarshal(fileContent, &savedMocks); err != nil {
+						return PortalAnnotation{}, err
+					}
+				}
+				jsonMock, ok := savedMocks[tokens[i]]
+				if !ok {
+					return PortalAnnotation{}, fmt.Errorf("could not find mock %s", tokens[i])
+				}
+
+				bytesValue, err := json.Marshal(jsonMock)
+				if err != nil {
+					return PortalAnnotation{}, err
+				}
+				mockedValue = string(bytesValue)
+			}
+			ann.Mocks = append(ann.Mocks, mockedValue)
 			continue
 		}
+
+		tokens[i] = strings.Trim(tokens[i], "\"")
 
 		if tokens[i] == "all" {
 			ann.All = true
@@ -88,22 +157,54 @@ func parseTokens(tokens []string) (ann PortalAnnotation) {
 			continue
 		}
 
+		if boxRe.MatchString(tokens[i]) {
+			split := strings.Split(tokens[i], "x")
+
+			if split[0] != "full" {
+				ann.Box.Height, _ = strconv.Atoi(split[0])
+			}
+			if split[1] != "full" {
+				ann.Box.Width, _ = strconv.Atoi(split[1])
+			}
+			continue
+		}
+
 		if i < len(tokens)-2 && tokens[i+1] == "=" {
+			tokens[i+2] = strings.Trim(tokens[i+2], "\"")
+
 			if tokens[i] == "group" {
 				ann.Group = tokens[i+2]
 			} else if tokens[i] == "view" {
 				ann.View = tokens[i+2]
 			} else if tokens[i] == "name" {
-				ann.Name = tokens[i+2]
+				ann.DisplayName = tokens[i+2]
+			} else if tokens[i] == "max" {
+				ann.Max, err = strconv.Atoi(tokens[i+2])
+				if err != nil {
+					return PortalAnnotation{}, err
+				}
+			} else if tokens[i] == "min" {
+				ann.Min, err = strconv.Atoi(tokens[i+2])
+				if err != nil {
+					return PortalAnnotation{}, err
+				}
 			}
 			i += 2
 		}
 	}
 
-	return ann
+	return ann, nil
 }
 
-func ParseAnnotation(annotationStr string) PortalAnnotation {
+func ParseAnnotation(annotationStr string) (ann PortalAnnotation, err error) {
 	tokens := tokenizeAnnotation(annotationStr)
-	return parseTokens(tokens)
+	ann, err = parseTokens(tokens)
+	if err != nil {
+		return PortalAnnotation{}, err
+	}
+
+	if ann.All && len(ann.Mocks) > 0 {
+		return PortalAnnotation{}, fmt.Errorf("annotation error: cannot have both all and mocks defined")
+	}
+	return ann, nil
 }

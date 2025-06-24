@@ -10,12 +10,12 @@ import (
 )
 
 func TestSubfolders(t *testing.T) {
-	variables, err := ParseProject("tests/togiftit", ParseOptions{Verbose: false})
+	variables, _, err := ParseProject("tests/togiftit", ParseOptions{Verbose: true})
 	if err != nil {
 		t.Errorf("Error parsing project")
 	}
 
-	for k, _ := range variables {
+	for k := range variables {
 		fmt.Println(k)
 	}
 
@@ -37,7 +37,7 @@ func TestSubfolders(t *testing.T) {
 }
 
 func TestJavascript(t *testing.T) {
-	variables, err := ParseFile("tests", "simple_javascript.js", ParseOptions{})
+	variables, mocks, err := ParseFile("tests", "simple_javascript.js", ParseOptions{Verbose: true})
 	if err != nil {
 		t.Errorf("error parsing project: " + err.Error())
 	}
@@ -48,7 +48,7 @@ func TestJavascript(t *testing.T) {
 				PortalVariable: shared.PortalVariable{
 					Name:        "a",
 					DisplayName: "a",
-					View:        "simple_javascript.js",
+					View:        "simple_javascript",
 					Group:       "gruppaccio",
 				},
 				Max:   1234,
@@ -62,7 +62,7 @@ func TestJavascript(t *testing.T) {
 				PortalVariable: shared.PortalVariable{
 					Name:        "b",
 					DisplayName: "ecco il bel nome",
-					View:        "simple_javascript.js",
+					View:        "simple_javascript",
 					Group:       "altro",
 				},
 				Value: "ciao",
@@ -71,7 +71,7 @@ func TestJavascript(t *testing.T) {
 				PortalVariable: shared.PortalVariable{
 					Name:        "c",
 					DisplayName: "nome",
-					View:        "simple_javascript.js",
+					View:        "simple_javascript",
 					Group:       "Default",
 				},
 				Value: "eccoci",
@@ -83,10 +83,18 @@ func TestJavascript(t *testing.T) {
 	if diff := cmp.Diff(expected, variables); diff != "" {
 		t.Errorf("mismatch (-want +got):\n%s", diff)
 	}
+
+	if len(mocks) != 1 {
+		t.Errorf("bad mocks length, expected 1, got %d", len(mocks))
+	}
+
+	if mocks["nome"] != "\"Massimiliano Congiu\"" {
+		t.Errorf("bad mock nome, expected \"Massimiliano Congiu\", got %s", mocks["nome"])
+	}
 }
 
 func TestJavascriptAll(t *testing.T) {
-	variables, err := ParseFile("tests", "simple_javascript_all.js", ParseOptions{Verbose: true})
+	variables, _, err := ParseFile("tests", "simple_javascript_all.js", ParseOptions{Verbose: true})
 	if err != nil {
 		t.Errorf("error parsing project: " + err.Error())
 	}
@@ -111,7 +119,7 @@ func TestJavascriptAll(t *testing.T) {
 }
 
 func TestTailwind(t *testing.T) {
-	variables, err := ParseFile("tests", "tailwind.js", ParseOptions{Verbose: true})
+	variables, _, err := ParseFile("tests", "tailwind.js", ParseOptions{Verbose: true})
 	if err != nil {
 		t.Errorf("error parsing project: " + err.Error())
 	}
@@ -134,7 +142,7 @@ func TestUI(t *testing.T) {
 		panic(err)
 	}
 
-	variables, err := ParseFile("internal/parser/tests", "ui.jsx", ParseOptions{Verbose: true})
+	variables, _, err := ParseFile("internal/parser/tests", "ui.jsx", ParseOptions{Verbose: true})
 	if err != nil {
 		t.Errorf("error parsing project: " + err.Error())
 	}
@@ -159,6 +167,30 @@ func TestUI(t *testing.T) {
 		if v, ok := expected[p.Prefix]; ok && v == p.Value {
 			delete(expected, p.Prefix)
 		}
+	}
+
+	if len(variables.UI["CardLanding"].PropsMocks) != 4 {
+		t.Errorf("bad props mocks length: %d", len(variables.UI["CardLanding"].PropsMocks))
+	}
+
+	expectedMocks := map[string]string{
+		"props": "\"propano\"",
+		"var1":  "2",
+		"var2":  "4",
+		"var3":  "{asd: \"ciao\"}",
+	}
+
+	for k, v := range variables.UI["CardLanding"].PropsMocks {
+		if expectedMocks[k] != v {
+			t.Errorf("expected %s, got %s", expectedMocks[k], v)
+		}
+	}
+
+	if variables.UI["CardLanding"].Box.Height != 0 {
+		t.Errorf("Bad box height")
+	}
+	if variables.UI["CardLanding"].Box.Width != 234 {
+		t.Errorf("Bad box width, got %d, expected %d", variables.UI["CardLanding"].Box.Width, 234)
 	}
 
 	if len(expected) > 0 {

@@ -11,6 +11,8 @@ const ast = parser.parse(sourceCode, {
 });
 
 const components = {};
+const comments = {};
+const props = {};
 
 const rootIds = {};
 
@@ -25,9 +27,28 @@ traverse(ast, {
         let hasComment = false;
 
         for (let comment of path.node.leadingComments) {
-            if (comment.value.trim().includes("@portal")) {
+            const trimmedComment = comment.value.trim();
+
+            if (trimmedComment.includes("@portal") && trimmedComment.includes("ui")) {
                 hasComment = true;
-                break;
+                comments[rootName] = [];
+                props[rootName] = [];
+
+                const params = path.node.params;
+
+                if (params[0] && params[0].type === 'ObjectPattern') {
+                    for (let p of params[0].properties) {
+                        if (p.key && p.key.name) {
+                            props[rootName].push(p.key.name);
+                        }
+                    }
+                }
+                else if (params[0] && params[0].type === 'Identifier') {
+                    props[rootName].push(params[0].name);
+                }
+            }
+            if (hasComment) {
+                comments[rootName].push(trimmedComment);
             }
         }
 
@@ -44,6 +65,28 @@ traverse(ast, {
     },
     VariableDeclarator(path) {
         const rootName = path.node.id.name;
+
+        if (!path.node.leadingComments) {
+            return;
+        }
+
+        let hasComment = false;
+
+        for (let comment of path.node.leadingComments) {
+            const trimmedComment = comment.value.trim();
+
+            if (trimmedComment.includes("@portal") && trimmedComment.includes("ui")) {
+                hasComment = true;
+                comments[rootName] = [];
+            }
+            if (hasComment) {
+                comments[rootName].push(trimmedComment);
+            }
+        }
+
+        if (!hasComment) {
+            return;
+        }
 
         if (path.node.init && path.node.init.type === "ArrowFunctionExpression" && path.node.init.body && path.node.init.body.body) {
             for (let el of path.node.init.body.body) {
@@ -119,4 +162,4 @@ function parseTailwindString(tailwind) {
     return result;
 }
 
-console.log(JSON.stringify(components, null, 2));
+console.log(JSON.stringify({components, props, comments}, null, 2));

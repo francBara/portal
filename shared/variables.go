@@ -40,6 +40,11 @@ type StringVariable struct {
 type UIVariable struct {
 	PortalVariable
 	UINode
+	PropsMocks map[string]string `json:"propsMocks"`
+	Box        struct {
+		Height int
+		Width  int
+	} `json:"box"`
 	HighlightedNode int `json:"highlightedNode"`
 }
 

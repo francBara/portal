@@ -100,7 +100,7 @@ func TestUiPatcher(t *testing.T) {
 		panic(err)
 	}
 
-	variables, err := parser.ParseFile("internal/parser/tests", "ui.jsx", parser.ParseOptions{})
+	variables, _, err := parser.ParseFile("internal/parser/tests", "ui.jsx", parser.ParseOptions{})
 	if err != nil {
 		panic(err)
 	}

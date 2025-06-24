@@ -18,7 +18,7 @@ func init() {
 		Short: "Parse the given project",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			variables, err := parser.ParseProject(args[0], parser.ParseOptions{})
+			variables, _, err := parser.ParseProject(args[0], parser.ParseOptions{})
 			if err != nil {
 				log.Fatalln("Error parsing project: " + err.Error())
 			}

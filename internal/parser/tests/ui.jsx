@@ -2,9 +2,8 @@ import React from "react";
 import BottoneRosso from "../Bottoni/BottoneRosso";
 import Punti from "../../../assets/svg/Punti";
 
-//@portal ui
-
-function CardLanding({ props }) {
+//@portal ui fullx234 mock "propano" 2 4 {asd: "ciao"}
+function CardLanding({ props, var1, var2, var3 }) {
     const img = props.img[0].length
         ? props.img[0]
         : props.img[1].length

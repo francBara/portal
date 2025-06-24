@@ -7,11 +7,12 @@ import (
 	"os"
 	"path/filepath"
 	"portal/internal/server/github"
+	"portal/shared"
 )
 
 // handleDependencies copies the component located at componentFilePath to its corresponding location in component-preview,
 // then calls handleDependencies on its internal dependencies, and returns external dependencies.
-func handleDependencies(componentFilePath string, visited map[string]struct{}) (externalDependencies map[string]string, err error) {
+func handleDependencies(componentFilePath string, mocks shared.PortalMocks, visited map[string]struct{}) (externalDependencies map[string]string, err error) {
 	// Avoids cycles
 	if _, ok := visited[componentFilePath]; ok {
 		return map[string]string{}, nil
@@ -24,7 +25,13 @@ func handleDependencies(componentFilePath string, visited map[string]struct{}) (
 	if err := os.MkdirAll(filepath.Join("component-preview/src/components", filepath.Dir(componentFilePath)), 0755); err != nil {
 		return map[string]string{}, err
 	}
-	if err := copyFile(filepath.Join(github.RepoFolderName, componentFilePath), filepath.Join("component-preview/src/components", componentFilePath)); err != nil {
+
+	if fileMocks, ok := mocks[componentFilePath]; ok {
+		slog.Info("Mocking variables")
+		if err = applyMocks(filepath.Join(github.RepoFolderName, componentFilePath), filepath.Join("component-preview/src/components", componentFilePath), fileMocks); err != nil {
+			return map[string]string{}, err
+		}
+	} else if err := copyFile(filepath.Join(github.RepoFolderName, componentFilePath), filepath.Join("component-preview/src/components", componentFilePath)); err != nil {
 		return map[string]string{}, err
 	}
 
@@ -48,7 +55,7 @@ func handleDependencies(componentFilePath string, visited map[string]struct{}) (
 				importedFilePath += "." + fileExt
 			}
 
-			currExtDependencies, err := handleDependencies(importedFilePath, visited)
+			currExtDependencies, err := handleDependencies(importedFilePath, mocks, visited)
 			if err != nil {
 				return map[string]string{}, err
 			}

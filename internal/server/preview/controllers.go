@@ -51,6 +51,7 @@ func UpdatePreview() func(w http.ResponseWriter, r *http.Request) {
 
 type buildComponentPayload struct {
 	FilePath string `json:"filePath"`
+	Name     string `json:"name"`
 }
 
 var mutex sync.Mutex
@@ -78,7 +79,39 @@ func BuildComponentPreview() func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = build.BuildComponentPage(payload.FilePath)
+		variables, err := utils.LoadVariables()
+		if err != nil {
+			http.Error(w, "could not load variables", http.StatusInternalServerError)
+			return
+		}
+
+		if _, ok := variables[payload.FilePath]; !ok || len(variables[payload.FilePath].UI) == 0 {
+			http.Error(w, "there are no UI variables in given file path", http.StatusBadRequest)
+			return
+		}
+
+		var variable shared.UIVariable
+
+		if payload.Name != "" {
+			if _, ok := variables[payload.FilePath].UI[payload.Name]; !ok {
+				http.Error(w, "the ui variable in the given path does not exist", http.StatusBadRequest)
+				return
+			}
+			variable = variables[payload.FilePath].UI[payload.Name]
+		} else {
+			for _, currVar := range variables[payload.FilePath].UI {
+				variable = currVar
+				break
+			}
+		}
+
+		mocks, err := utils.LoadMocks()
+		if err != nil {
+			http.Error(w, "could not load mocks", http.StatusInternalServerError)
+			return
+		}
+
+		err = build.BuildComponentPage(payload.FilePath, variable, mocks)
 		if err != nil {
 			slog.Error(err.Error())
 			http.Error(w, "Could not build component preview", http.StatusInternalServerError)

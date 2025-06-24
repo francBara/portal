@@ -29,7 +29,10 @@ func TestTokenizer(t *testing.T) {
 func TestParser(t *testing.T) {
 	tokens := []string{"all", "ui", "group", "=", "blabla", "view", "=", "sample", "mock", "\"Rocky Balboa\"", "2", "{asd: 2}"}
 
-	annotation := parseTokens(tokens)
+	annotation, err := parseTokens(tokens)
+	if err != nil {
+		t.Error(err)
+	}
 
 	if !annotation.All {
 		t.Error("all is false")
@@ -46,21 +49,25 @@ func TestParser(t *testing.T) {
 		t.Errorf("bad view, expected %s, got %s", "sample", annotation.View)
 	}
 
-	if len(annotation.Mock) != 3 {
-		t.Errorf("bad mock length, expected %d, got %d", 3, len(annotation.Mock))
+	if len(annotation.Mocks) != 3 {
+		t.Errorf("bad mock length, expected %d, got %d", 3, len(annotation.Mocks))
 	}
 
-	for i, mock := range annotation.Mock {
-		if mock != tokens[i+9] {
-			t.Errorf("bad mock, expected %s, got %s", tokens[i+9], mock)
+	for i, mock := range annotation.Mocks {
+		token := tokens[i+9]
+		if mock != token {
+			t.Errorf("bad mock, expected %s, got %s", token, mock)
 		}
 	}
 }
 
 func TestAnnotation(t *testing.T) {
-	annotationStr := "ui    view     =   lskjdf		name = \"lorem ipsum hahaha\" mock all user gift 2 "
+	annotationStr := "ui    view     =   lskjdf		name = \"lorem ipsum hahaha\" mock \"all\" user \"gift\" 2 "
 
-	annotation := ParseAnnotation(annotationStr)
+	annotation, err := ParseAnnotation(annotationStr)
+	if err != nil {
+		t.Error("error")
+	}
 
 	if !annotation.UI {
 		t.Error("UI is false")
@@ -69,8 +76,8 @@ func TestAnnotation(t *testing.T) {
 		t.Error("All is true")
 	}
 
-	if annotation.Name != "lorem ipsum hahaha" {
-		t.Errorf("bad name, expected lorem ipsum hahaha, got %s", annotation.Name)
+	if annotation.DisplayName != "lorem ipsum hahaha" {
+		t.Errorf("bad name, expected lorem ipsum hahaha, got %s", annotation.DisplayName)
 	}
 
 	if annotation.Group != "" {
@@ -81,16 +88,16 @@ func TestAnnotation(t *testing.T) {
 		t.Errorf("bad view, expected %s, got %s", "lskjdf", annotation.View)
 	}
 
-	if annotation.Mock[0] != "all" {
+	if annotation.Mocks[0] != "\"all\"" {
 		t.Errorf("bad first mock")
 	}
-	if annotation.Mock[1] != "user" {
-		t.Error("bad second mock")
+	if annotation.Mocks[1] != "{\"name\":\"Jeremy\",\"surname\":\"Puddu\"}" {
+		t.Errorf("bad second mock, got %s, expected %s", annotation.Mocks[1], "{\"name\":\"Jeremy\",\"surname\":\"Puddu\"}")
 	}
-	if annotation.Mock[2] != "gift" {
+	if annotation.Mocks[2] != "\"gift\"" {
 		t.Error("bad third mock")
 	}
-	if annotation.Mock[3] != "2" {
+	if annotation.Mocks[3] != "2" {
 		t.Error("bad fourth mock")
 	}
 }

@@ -11,3 +11,7 @@ const c = 'eccoci'
 //@portal
 
 let d = 24;
+
+
+//    @portal mock "Massimiliano Congiu"
+let nome = externalFunction();
