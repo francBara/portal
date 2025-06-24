@@ -4,7 +4,7 @@ const recast = require('recast');
 
 const highlightClass = "outline outline-2 outline-red-500 outline-offset-2";
 
-const currentId = 0;
+let currentId = 0;
 
 function updateNode(node, highlightedNodeId) {
     if (!t.isJSXElement(node)) return;
