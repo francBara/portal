@@ -51,7 +51,7 @@ func ParseProject(rootPath string, options ParseOptions) (shared.PortalVariables
 			// Parses the current file and merges it with the total variables
 			currentVariables, currentMocks, err := ParseFile(rootPath, relativePath, options)
 			if err != nil {
-				return err
+				return fmt.Errorf("parse file %s: %w", relativePath, err)
 			}
 
 			if currentVariables.Length() > 0 {
@@ -117,10 +117,12 @@ func ParseFile(basePath string, filePath string, options ParseOptions) (shared.F
 				// UI variables parsing is outsourced to generateTree tool
 				variables.UI, err = uiVariablesFactory(basePath, filePath)
 				if err != nil {
-					return shared.FileVariables{}, shared.FileMocks{}, err
+					return shared.FileVariables{}, shared.FileMocks{}, fmt.Errorf("parsing ui variables: %w", err)
 				}
 
 				slog.Info("parsed UI root", "basePath", basePath, "filePath", filePath)
+
+				continue
 			}
 
 			// The "all" positional argument implies scanning of all subsequent variables, its arguments are applied globally
@@ -161,12 +163,12 @@ func ParseFile(basePath string, filePath string, options ParseOptions) (shared.F
 				if varType == "integer" {
 					variables.Integer[varName], err = numberVariableFactory(varName, value, filePath, ann)
 					if err != nil {
-						return shared.FileVariables{}, shared.FileMocks{}, err
+						return shared.FileVariables{}, shared.FileMocks{}, fmt.Errorf("parsing integer %s: %w", varName, err)
 					}
 				} else if varType == "float" {
 					variables.Float[varName], err = floatVariableFactory(varName, value, filePath, ann)
 					if err != nil {
-						return shared.FileVariables{}, shared.FileMocks{}, err
+						return shared.FileVariables{}, shared.FileMocks{}, fmt.Errorf("parsing float %s: %w", varName, err)
 					}
 				} else if varType == "string" {
 					variables.String[varName] = stringVariableFactory(varName, value, filePath, ann)

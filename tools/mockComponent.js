@@ -11,8 +11,6 @@ process.stdin.on("end", () => {
         parser: require("recast/parsers/babel-ts"),
     });
 
-    console.error(input.mocks);
-
     traverse(ast, {
         VariableDeclaration(path) {
             if (!path.node.leadingComments) {

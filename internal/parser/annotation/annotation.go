@@ -181,12 +181,12 @@ func parseTokens(tokens []string) (ann PortalAnnotation, err error) {
 			} else if tokens[i] == "max" {
 				ann.Max, err = strconv.Atoi(tokens[i+2])
 				if err != nil {
-					return PortalAnnotation{}, err
+					return PortalAnnotation{}, fmt.Errorf("scanning annotation token max %s: %w", tokens[i+2], err)
 				}
 			} else if tokens[i] == "min" {
 				ann.Min, err = strconv.Atoi(tokens[i+2])
 				if err != nil {
-					return PortalAnnotation{}, err
+					return PortalAnnotation{}, fmt.Errorf("scanning annotation token min %s: %w", tokens[i+2], err)
 				}
 			}
 			i += 2

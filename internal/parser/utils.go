@@ -18,11 +18,16 @@ import (
 func GetVariableType(value string) string {
 	if value[0] == '"' && value[len(value)-1] == '"' || value[0] == '\'' && value[len(value)-1] == '\'' {
 		return "string"
-	} else if strings.Contains(value, ".") {
-		return "float"
-	} else {
+	}
+
+	if _, err := strconv.Atoi(value); err == nil {
 		return "integer"
 	}
+	if _, err := strconv.ParseFloat(value, 64); err == nil {
+		return "float"
+	}
+
+	return ""
 }
 
 func IsTailwindLine(line string) bool {

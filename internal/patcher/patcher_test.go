@@ -128,9 +128,4 @@ func TestUiPatcher(t *testing.T) {
 	if !strings.Contains(patched, "className=\"cursor-puntatore px-5 pb-5\"") {
 		t.Error("bad patch")
 	}
-
-	os.WriteFile("output.jsx", []byte(patched), 0644)
-	if err != nil {
-		panic(err)
-	}
 }

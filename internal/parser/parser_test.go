@@ -137,6 +137,22 @@ func TestTailwind(t *testing.T) {
 	}
 }
 
+func checkTree(root shared.UINode, visited map[int]struct{}) (size int) {
+	if _, ok := visited[root.Id]; ok {
+		panic(fmt.Sprintf("node %d already exists", root.Id))
+	}
+
+	visited[root.Id] = struct{}{}
+
+	totalSize := 0
+
+	for _, child := range root.Children {
+		totalSize += checkTree(*child, visited)
+	}
+
+	return totalSize + 1
+}
+
 func TestUI(t *testing.T) {
 	if err := os.Chdir("../.."); err != nil {
 		panic(err)
@@ -195,5 +211,11 @@ func TestUI(t *testing.T) {
 
 	if len(expected) > 0 {
 		t.Error("Bad properties")
+	}
+
+	size := checkTree(variables.UI["CardLanding"].UINode, map[int]struct{}{})
+
+	if size != 14 {
+		t.Errorf("Bad tree size, expected 14, got %d", size)
 	}
 }

@@ -129,10 +129,12 @@ function collectJSX(node, rootName) {
     node.children.forEach(child => {
         if (t.isJSXElement(child)) {
             element.children.push(collectJSX(child, rootName));
-        } else if (t.isJSXText(child)) {
+        }
+        else if (t.isJSXText(child)) {
             const trimmed = child.value.trim();
             if (trimmed) {
-                element.children.push({ type: 'text', value: trimmed });
+                element.children.push({ type: 'text', properties: [{prefix: "content", value: trimmed}], id: rootIds[rootName], children: [] });
+                rootIds[rootName]++;
             }
         }
     });
