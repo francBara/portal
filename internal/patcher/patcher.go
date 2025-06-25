@@ -77,6 +77,8 @@ func PatchFile(content string, newVariables shared.FileVariables) (patchedConten
 					newLine := fmt.Sprintf("%s%s %s = \"%s\";", indentation, declarationType, varName, newVar.Value)
 
 					newContent = append(newContent, newLine)
+				} else {
+					newContent = append(newContent, line)
 				}
 			} else if shared.TailwindRegex.MatchString(line) {
 				varName, _ := parser.ParseTailwindLine(line)
