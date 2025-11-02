@@ -52,10 +52,6 @@ func (variables PortalVariables) ToMap() VariablesMap {
 				"type":  "string",
 			})
 		}
-
-		for _, uiVar := range fileVars.UI {
-			mappedVariables.add(uiVar.PortalVariable, filePath, uiVar.UINode.ToMap())
-		}
 	}
 
 	return mappedVariables

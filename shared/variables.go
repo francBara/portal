@@ -37,23 +37,11 @@ type StringVariable struct {
 	Value string `json:"value"`
 }
 
-type UIVariable struct {
-	PortalVariable
-	UINode
-	PropsMocks map[string]string `json:"propsMocks"`
-	Box        struct {
-		Height int
-		Width  int
-	} `json:"box"`
-	HighlightedNode int `json:"highlightedNode"`
-}
-
 // FileVariables retains all annotated variables in a project, along with view, group and files data.
 type FileVariables struct {
 	Integer map[string]IntVariable    `json:"integer"`
 	Float   map[string]FloatVariable  `json:"float"`
 	String  map[string]StringVariable `json:"string"`
-	UI      map[string]UIVariable     `json:"ui"`
 }
 
 type PortalVariables map[string]FileVariables
@@ -63,7 +51,6 @@ func (variables *FileVariables) Init() {
 	variables.Integer = make(map[string]IntVariable)
 	variables.Float = make(map[string]FloatVariable)
 	variables.String = make(map[string]StringVariable)
-	variables.UI = make(map[string]UIVariable)
 }
 
 func (variables PortalVariables) DumpVariables() {
@@ -140,27 +127,6 @@ func (variables PortalVariables) GetPatch(varsMap VariablesMap) (PortalVariables
 
 					currVar.Value = value
 					fileVariables.String[varName] = currVar
-				} else if _, ok := fileVariables.UI[varName]; ok {
-					marshaled, err := json.Marshal(variable)
-					if err != nil {
-						panic(err)
-					}
-
-					var root UINode
-
-					err = json.Unmarshal(marshaled, &root)
-					if err != nil {
-						return PortalVariables{}, errors.New("value is not UI node")
-					}
-
-					currVar := fileVariables.UI[varName]
-
-					if currVar.UINode.isEqual(root) {
-						continue
-					}
-
-					currVar.UINode = root
-					fileVariables.UI[varName] = currVar
 				}
 
 				variables[variable["filePath"].(string)] = fileVariables
@@ -187,14 +153,13 @@ func (variables FileVariables) Merge(newVariables FileVariables) FileVariables {
 	merged.Integer = mergeMaps(variables.Integer, newVariables.Integer)
 	merged.Float = mergeMaps(variables.Float, newVariables.Float)
 	merged.String = mergeMaps(variables.String, newVariables.String)
-	merged.UI = mergeMaps(variables.UI, newVariables.UI)
 
 	return merged
 }
 
 // Length returns the total number of variables in FileVariables.
 func (fileVariables FileVariables) Length() int {
-	return len(fileVariables.Integer) + len(fileVariables.Float) + len(fileVariables.String) + len(fileVariables.UI)
+	return len(fileVariables.Integer) + len(fileVariables.Float) + len(fileVariables.String)
 }
 
 // Length returns the total number of variables in PortalVariables.

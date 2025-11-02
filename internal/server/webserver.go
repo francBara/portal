@@ -10,7 +10,6 @@ import (
 	"portal/internal/server/auth"
 	"portal/internal/server/controllers"
 	"portal/internal/server/github"
-	"portal/internal/server/preview"
 	"portal/internal/server/utils"
 	"strconv"
 
@@ -54,15 +53,6 @@ func RunServer(port int) {
 
 			// Applies the update to the remote repo
 			secureApi.Post("/patch", controllers.PushChanges(configs))
-
-			// Builds and serves a single component preview
-			secureApi.Post("/preview/build", preview.BuildComponentPreview())
-
-			// Updates the preview with new variables
-			secureApi.Post("/preview/update", preview.UpdatePreview())
-
-			// Highlights the given node in the preview
-			secureApi.Post("/preview/highlight", preview.HighlightNode())
 		})
 	})
 

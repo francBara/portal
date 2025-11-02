@@ -113,18 +113,6 @@ func ParseFile(basePath string, filePath string, options ParseOptions) (shared.F
 				}
 			}
 
-			if ann.UI {
-				// UI variables parsing is outsourced to generateTree tool
-				variables.UI, err = uiVariablesFactory(basePath, filePath)
-				if err != nil {
-					return shared.FileVariables{}, shared.FileMocks{}, fmt.Errorf("parsing ui variables: %w", err)
-				}
-
-				slog.Info("parsed UI root", "basePath", basePath, "filePath", filePath)
-
-				continue
-			}
-
 			// The "all" positional argument implies scanning of all subsequent variables, its arguments are applied globally
 			if ann.All {
 				scanAll = true

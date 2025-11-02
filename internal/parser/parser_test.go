@@ -2,7 +2,6 @@ package parser
 
 import (
 	"fmt"
-	"os"
 	"portal/shared"
 	"testing"
 
@@ -77,7 +76,6 @@ func TestJavascript(t *testing.T) {
 				Value: "eccoci",
 			},
 		},
-		UI: map[string]shared.UIVariable{},
 	}
 
 	if diff := cmp.Diff(expected, variables); diff != "" {
@@ -134,88 +132,5 @@ func TestTailwind(t *testing.T) {
 
 	if variables.Integer["bg-color-red"].Value != 500 {
 		t.Errorf("bad bg-color value %d", variables.Integer["bg-color-red"].Value)
-	}
-}
-
-func checkTree(root shared.UINode, visited map[int]struct{}) (size int) {
-	if _, ok := visited[root.Id]; ok {
-		panic(fmt.Sprintf("node %d already exists", root.Id))
-	}
-
-	visited[root.Id] = struct{}{}
-
-	totalSize := 0
-
-	for _, child := range root.Children {
-		totalSize += checkTree(*child, visited)
-	}
-
-	return totalSize + 1
-}
-
-func TestUI(t *testing.T) {
-	if err := os.Chdir("../.."); err != nil {
-		panic(err)
-	}
-
-	variables, _, err := ParseFile("internal/parser/tests", "ui.jsx", ParseOptions{Verbose: true})
-	if err != nil {
-		t.Errorf("error parsing project: " + err.Error())
-	}
-
-	if _, ok := variables.UI["CardLanding"]; !ok {
-		t.Error("CardLanding not present")
-	}
-
-	if variables.UI["CardLanding"].Type != "div" {
-		t.Error("Bad html type")
-	}
-
-	expected := map[string]string{
-		"m":           "2",
-		"w":           "56",
-		"rounded":     "lg",
-		"border-gray": "200",
-		"bg":          "white",
-	}
-
-	for _, p := range variables.UI["CardLanding"].Children[0].Properties {
-		if v, ok := expected[p.Prefix]; ok && v == p.Value {
-			delete(expected, p.Prefix)
-		}
-	}
-
-	if len(variables.UI["CardLanding"].PropsMocks) != 4 {
-		t.Errorf("bad props mocks length: %d", len(variables.UI["CardLanding"].PropsMocks))
-	}
-
-	expectedMocks := map[string]string{
-		"props": "\"propano\"",
-		"var1":  "2",
-		"var2":  "4",
-		"var3":  "{asd: \"ciao\"}",
-	}
-
-	for k, v := range variables.UI["CardLanding"].PropsMocks {
-		if expectedMocks[k] != v {
-			t.Errorf("expected %s, got %s", expectedMocks[k], v)
-		}
-	}
-
-	if variables.UI["CardLanding"].Box.Height != 0 {
-		t.Errorf("Bad box height")
-	}
-	if variables.UI["CardLanding"].Box.Width != 234 {
-		t.Errorf("Bad box width, got %d, expected %d", variables.UI["CardLanding"].Box.Width, 234)
-	}
-
-	if len(expected) > 0 {
-		t.Error("Bad properties")
-	}
-
-	size := checkTree(variables.UI["CardLanding"].UINode, map[int]struct{}{})
-
-	if size != 14 {
-		t.Errorf("Bad tree size, expected 14, got %d", size)
 	}
 }

@@ -16,11 +16,6 @@ func getIndentation(line string) string {
 
 // PatchFile returns a modified copy of content, where its annotated variables are updated with newVariables values.
 func PatchFile(content string, newVariables shared.FileVariables) (patchedContent string, err error) {
-	content, err = patchUI(content, newVariables.UI)
-	if err != nil {
-		return "", err
-	}
-
 	scanner := bufio.NewScanner(strings.NewReader(content))
 
 	var newContent []string

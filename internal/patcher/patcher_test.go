@@ -1,8 +1,6 @@
 package patcher
 
 import (
-	"os"
-	"portal/internal/parser"
 	"portal/shared"
 	"strings"
 	"testing"
@@ -92,40 +90,5 @@ duration-[1000ms]
 
 	if newContent[5] != "duration-[247ms]" {
 		t.Errorf("Wrong patched line %s", newContent[5])
-	}
-}
-
-func TestUiPatcher(t *testing.T) {
-	if err := os.Chdir("../.."); err != nil {
-		panic(err)
-	}
-
-	variables, _, err := parser.ParseFile("internal/parser/tests", "ui.jsx", parser.ParseOptions{})
-	if err != nil {
-		panic(err)
-	}
-
-	fileContent, err := os.ReadFile("internal/parser/tests/ui.jsx")
-	if err != nil {
-		panic(err)
-	}
-
-	content := string(fileContent)
-
-	variables.UI["CardLanding"].Children[0].Children[1].Properties[0] = struct {
-		Prefix string "json:\"prefix\""
-		Value  string "json:\"value\""
-	}{
-		Prefix: "cursor",
-		Value:  "puntatore",
-	}
-
-	patched, err := PatchFile(content, variables)
-	if err != nil {
-		panic(err)
-	}
-
-	if !strings.Contains(patched, "className=\"cursor-puntatore px-5 pb-5\"") {
-		t.Error("bad patch")
 	}
 }
