@@ -37,21 +37,21 @@ func TestVariablesMap(t *testing.T) {
 	}
 
 	expected := VariablesMap{
-		"index": {
-			"gruppettino": {
-				"numero": map[string]any{
-					"displayName": "numerino",
-					"max":         100,
-					"min":         0,
-					"step":        0,
-					"value":       2,
-					"type":        "integer",
-				},
-				"testo": map[string]any{
-					"displayName": "testino",
-					"value":       "contenuto",
-					"type":        "string",
-				},
+		"gruppettino": {
+			"numero": map[string]any{
+				"displayName": "numerino",
+				"filePath":    "index.js",
+				"max":         100,
+				"min":         0,
+				"step":        0,
+				"value":       2,
+				"type":        "integer",
+			},
+			"testo": map[string]any{
+				"displayName": "testino",
+				"filePath":    "index.js",
+				"value":       "contenuto",
+				"type":        "string",
 			},
 		},
 	}

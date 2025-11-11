@@ -5,19 +5,16 @@ import (
 	"io"
 )
 
-type VariablesMap map[string]map[string]map[string]map[string]any
+type VariablesMap map[string]map[string]map[string]any
 
 func (varsMap *VariablesMap) add(variable PortalVariable, filePath string, value map[string]any) {
-	if _, ok := (*varsMap)[variable.View]; !ok {
-		(*varsMap)[variable.View] = make(map[string]map[string]map[string]any)
-	}
-	if _, ok := (*varsMap)[variable.View][variable.Group]; !ok {
-		(*varsMap)[variable.View][variable.Group] = make(map[string]map[string]any)
+	if _, ok := (*varsMap)[variable.Group]; !ok {
+		(*varsMap)[variable.Group] = make(map[string]map[string]any)
 	}
 
 	value["displayName"] = variable.DisplayName
 	value["filePath"] = filePath
-	(*varsMap)[variable.View][variable.Group][variable.Name] = value
+	(*varsMap)[variable.Group][variable.Name] = value
 
 }
 
@@ -69,16 +66,14 @@ func JsonToVariablesMap(varsJson io.Reader) (VariablesMap, error) {
 		return VariablesMap{}, err
 	}
 
-	for viewName, groups := range *variablesMap {
-		for groupName, variables := range groups {
-			for varName, variable := range variables {
-				if num, ok := variable["value"].(json.Number); variable["type"] == "integer" && ok {
-					newValue, err := num.Int64()
-					if err != nil {
-						return VariablesMap{}, err
-					}
-					(*variablesMap)[viewName][groupName][varName]["value"] = int(newValue)
+	for groupName, variables := range *variablesMap {
+		for varName, variable := range variables {
+			if num, ok := variable["value"].(json.Number); variable["type"] == "integer" && ok {
+				newValue, err := num.Int64()
+				if err != nil {
+					return VariablesMap{}, err
 				}
+				(*variablesMap)[groupName][varName]["value"] = int(newValue)
 			}
 		}
 	}

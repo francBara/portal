@@ -44,6 +44,7 @@ type FileVariables struct {
 	String  map[string]StringVariable `json:"string"`
 }
 
+// PortalVariables retains all FileVariables by file name.
 type PortalVariables map[string]FileVariables
 
 // Init allocates PortalVariables inner maps.
@@ -80,57 +81,55 @@ func (variables PortalVariables) Collect() FileVariables {
 
 // GetPatch returns a new PortalVariables instance, where values are updated with VariablesMap values
 func (variables PortalVariables) GetPatch(varsMap VariablesMap) (PortalVariables, error) {
-	for _, groups := range varsMap {
-		for _, groupVars := range groups {
-			for varName, variable := range groupVars {
-				fileVariables := variables[variable["filePath"].(string)]
+	for _, groupVars := range varsMap {
+		for varName, variable := range groupVars {
+			fileVariables := variables[variable["filePath"].(string)]
 
-				if _, ok := fileVariables.Integer[varName]; ok {
-					value, ok := variable["value"].(int)
-					if !ok {
-						return PortalVariables{}, fmt.Errorf("variable %s is not int: %v %T", varName, variable["value"], variable["value"])
-					}
-
-					currVar := fileVariables.Integer[varName]
-
-					if value == currVar.Value {
-						continue
-					}
-
-					currVar.Value = value
-					fileVariables.Integer[varName] = currVar
-				} else if _, ok := fileVariables.Float[varName]; ok {
-					value, ok := variable["value"].(float32)
-					if !ok {
-						return PortalVariables{}, errors.New("value is not float32")
-					}
-
-					currVar := fileVariables.Float[varName]
-
-					if value == currVar.Value {
-						continue
-					}
-
-					currVar.Value = value
-					fileVariables.Float[varName] = currVar
-				} else if _, ok := fileVariables.String[varName]; ok {
-					value, ok := variable["value"].(string)
-					if !ok {
-						return PortalVariables{}, errors.New("value is not string")
-					}
-
-					currVar := fileVariables.String[varName]
-
-					if value == currVar.Value {
-						continue
-					}
-
-					currVar.Value = value
-					fileVariables.String[varName] = currVar
+			if _, ok := fileVariables.Integer[varName]; ok {
+				value, ok := variable["value"].(int)
+				if !ok {
+					return PortalVariables{}, fmt.Errorf("variable %s is not int: %v %T", varName, variable["value"], variable["value"])
 				}
 
-				variables[variable["filePath"].(string)] = fileVariables
+				currVar := fileVariables.Integer[varName]
+
+				if value == currVar.Value {
+					continue
+				}
+
+				currVar.Value = value
+				fileVariables.Integer[varName] = currVar
+			} else if _, ok := fileVariables.Float[varName]; ok {
+				value, ok := variable["value"].(float32)
+				if !ok {
+					return PortalVariables{}, errors.New("value is not float32")
+				}
+
+				currVar := fileVariables.Float[varName]
+
+				if value == currVar.Value {
+					continue
+				}
+
+				currVar.Value = value
+				fileVariables.Float[varName] = currVar
+			} else if _, ok := fileVariables.String[varName]; ok {
+				value, ok := variable["value"].(string)
+				if !ok {
+					return PortalVariables{}, errors.New("value is not string")
+				}
+
+				currVar := fileVariables.String[varName]
+
+				if value == currVar.Value {
+					continue
+				}
+
+				currVar.Value = value
+				fileVariables.String[varName] = currVar
 			}
+
+			variables[variable["filePath"].(string)] = fileVariables
 		}
 	}
 
