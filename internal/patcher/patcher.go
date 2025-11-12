@@ -19,16 +19,20 @@ func PatchFile(content string, newVariables shared.FileVariables) (patchedConten
 	scanner := bufio.NewScanner(strings.NewReader(content))
 
 	var newContent []string
+	lineCounter := 0
 
 	for scanner.Scan() {
 		line := scanner.Text()
+		lineCounter++
 
 		if matches := shared.AnnotationRegex.FindStringSubmatch(line); matches != nil {
 			newContent = append(newContent, line)
 
 			scanner.Scan()
 			line = scanner.Text()
+			lineCounter++
 
+			//TODO: Does this nested variable lookup account for @portal all annotations?
 			if matches := shared.VariableRegex.FindStringSubmatch(line); matches != nil {
 				indentation := getIndentation(line)
 				declarationType := matches[1]
@@ -39,10 +43,13 @@ func PatchFile(content string, newVariables shared.FileVariables) (patchedConten
 
 				varType := parser.GetVariableType(value)
 
+				varId := shared.GetId(varName, lineCounter)
+
 				if varType == "integer" {
-					newVar, ok := newVariables.Integer[varName]
+					newVar, ok := newVariables.Integer[varId]
 					if !ok {
-						fmt.Printf("Variable %s not found in new variables", varName)
+						//TODO: Should return error
+						fmt.Printf("Variable %s at line %d not found in new variables", varName, lineCounter)
 						newContent = append(newContent, line)
 						continue
 					}
@@ -51,9 +58,9 @@ func PatchFile(content string, newVariables shared.FileVariables) (patchedConten
 
 					newContent = append(newContent, newLine)
 				} else if varType == "float" {
-					newVar, ok := newVariables.Float[varName]
+					newVar, ok := newVariables.Float[varId]
 					if !ok {
-						fmt.Printf("Variable %s not found in new variables", varName)
+						fmt.Printf("Variable %s at line %d not found in new variables", varName, lineCounter)
 						newContent = append(newContent, line)
 						continue
 					}
@@ -62,9 +69,9 @@ func PatchFile(content string, newVariables shared.FileVariables) (patchedConten
 
 					newContent = append(newContent, newLine)
 				} else if varType == "string" {
-					newVar, ok := newVariables.String[varName]
+					newVar, ok := newVariables.String[varId]
 					if !ok {
-						fmt.Printf("Variable %s not found in new variables", varName)
+						fmt.Printf("Variable %s at line %d not found in new variables", varName, lineCounter)
 						newContent = append(newContent, line)
 						continue
 					}
@@ -75,19 +82,6 @@ func PatchFile(content string, newVariables shared.FileVariables) (patchedConten
 				} else {
 					newContent = append(newContent, line)
 				}
-			} else if shared.TailwindRegex.MatchString(line) {
-				varName, _ := parser.ParseTailwindLine(line)
-
-				newVar, ok := newVariables.Integer[varName]
-				if !ok {
-					fmt.Printf("Tailwind variable %s not found in new variables", varName)
-					newContent = append(newContent, line)
-					continue
-				}
-
-				newLine := UpdateTailwindLine(line, newVar.Value)
-
-				newContent = append(newContent, newLine)
 			} else {
 				newContent = append(newContent, line)
 			}

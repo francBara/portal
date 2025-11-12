@@ -72,17 +72,15 @@ func ParseProject(rootPath string, options ParseOptions) (shared.PortalVariables
 }
 
 // ParseFile takes in a file path and outputs the FileVariables relative to all the file @portal annotations.
-func ParseFile(basePath string, filePath string, options ParseOptions) (shared.FileVariables, shared.FileMocks, error) {
+func ParseFile(basePath string, filePath string, options ParseOptions) (shared.FileVariables, error) {
 	file, err := os.Open(filepath.Join(basePath, filePath))
 	if err != nil {
-		return shared.FileVariables{}, shared.FileMocks{}, err
+		return shared.FileVariables{}, err
 	}
 	defer file.Close()
 
 	var variables shared.FileVariables
 	variables.Init()
-
-	var mocks shared.FileMocks = make(shared.FileMocks)
 
 	scanAll := false
 	defaultAnn := annotation.PortalAnnotation{
@@ -92,25 +90,25 @@ func ParseFile(basePath string, filePath string, options ParseOptions) (shared.F
 	var ann annotation.PortalAnnotation
 	hasAnnotation := false
 
+	lineCounter := 0
+
 	scanner := bufio.NewScanner(file)
 
 	file.Seek(0, io.SeekStart)
 
 	for scanner.Scan() {
 		line := scanner.Text()
+		lineCounter++
 
 		// Annotation match
 		if annotationMatches := shared.AnnotationRegex.FindStringSubmatch(line); annotationMatches != nil {
 			ann, err = annotation.ParseAnnotation(annotationMatches[1])
 			if err != nil {
-				return shared.FileVariables{}, shared.FileMocks{}, fmt.Errorf("error parsing annotation %s: %w", annotationMatches[1], err)
+				return shared.FileVariables{}, fmt.Errorf("error parsing annotation %s: %w", annotationMatches[1], err)
 			}
 
 			if options.Verbose {
 				fmt.Printf("Annotation: %s\n", line)
-				if len(ann.Mocks) > 0 {
-					fmt.Printf("Mock: %s\n", ann.Mocks[0])
-				}
 			}
 
 			// The "all" positional argument implies scanning of all subsequent variables, its arguments are applied globally
@@ -138,50 +136,29 @@ func ParseFile(basePath string, filePath string, options ParseOptions) (shared.F
 				varName := varMatches[2]
 				value := varMatches[3]
 
-				if len(ann.Mocks) > 0 {
-					mocks[varName] = ann.Mocks[0]
-					hasAnnotation = false
-					continue
-				}
-
 				value = strings.Trim(value, ";")
 
 				varType := GetVariableType(value)
 
+				varId := shared.GetId(varName, lineCounter)
+
 				if varType == "integer" {
-					variables.Integer[varName], err = numberVariableFactory(varName, value, filePath, ann)
+					variables.Integer[varId], err = numberVariableFactory(varName, value, filePath, lineCounter, ann)
 					if err != nil {
-						return shared.FileVariables{}, shared.FileMocks{}, fmt.Errorf("parsing integer %s: %w", varName, err)
+						return shared.FileVariables{}, fmt.Errorf("parsing integer %s: %w", varName, err)
 					}
 				} else if varType == "float" {
-					variables.Float[varName], err = floatVariableFactory(varName, value, filePath, ann)
+					variables.Float[varId], err = floatVariableFactory(varName, value, filePath, lineCounter, ann)
 					if err != nil {
-						return shared.FileVariables{}, shared.FileMocks{}, fmt.Errorf("parsing float %s: %w", varName, err)
+						return shared.FileVariables{}, fmt.Errorf("parsing float %s: %w", varName, err)
 					}
 				} else if varType == "string" {
-					variables.String[varName] = stringVariableFactory(varName, value, filePath, ann)
-				}
-			} else if shared.TailwindRegex.MatchString(line) {
-				varName, value := ParseTailwindLine(line)
-
-				if options.Verbose {
-					slog.Info(fmt.Sprintf("parsed tailwind line %s", line))
-				}
-
-				_, ok := variables.Integer[varName]
-
-				if ok {
-					varName += shared.GetRandomString(4)
-				}
-
-				variables.Integer[varName], err = numberVariableFactory(varName, value, filePath, ann)
-				if err != nil {
-					return shared.FileVariables{}, shared.FileMocks{}, err
+					variables.String[varId] = stringVariableFactory(varName, value, filePath, lineCounter, ann)
 				}
 			}
 			hasAnnotation = false
 		}
 	}
 
-	return variables, mocks, nil
+	return variables, nil
 }

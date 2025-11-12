@@ -115,22 +115,3 @@ func TestJavascriptAll(t *testing.T) {
 		t.Errorf("int variable d wrong value %d", variables.Integer["d"].Value)
 	}
 }
-
-func TestTailwind(t *testing.T) {
-	variables, _, err := ParseFile("tests", "tailwind.js", ParseOptions{Verbose: true})
-	if err != nil {
-		t.Errorf("error parsing project: " + err.Error())
-	}
-
-	if variables.Integer["duration"].Value != 1000 {
-		t.Errorf("bad duration value %d", variables.Integer["duration"].Value)
-	}
-
-	if variables.Integer["hover:scale"].Value != 92 {
-		t.Errorf("bad hover:scale value %d", variables.Integer["hover:scale"].Value)
-	}
-
-	if variables.Integer["bg-color-red"].Value != 500 {
-		t.Errorf("bad bg-color value %d", variables.Integer["bg-color-red"].Value)
-	}
-}

@@ -13,7 +13,6 @@ import (
 )
 
 type PortalAnnotation struct {
-	UI          bool
 	All         bool
 	DisplayName string
 	Group       string
@@ -21,15 +20,10 @@ type PortalAnnotation struct {
 	Max         int
 	Min         int
 	Step        int
-	Mocks       []string
-	Box         struct {
-		Height int
-		Width  int
-	}
 }
 
 // GetPortalVariable generates PortalVariable base data basing on arguments, name and filePath.
-func (ann PortalAnnotation) GetPortalVariable(name string, filePath string) shared.PortalVariable {
+func (ann PortalAnnotation) GetPortalVariable(name string, filePath string, lineNumber int) shared.PortalVariable {
 	group := ann.Group
 	if group == "" {
 		group = "Default"
@@ -50,6 +44,7 @@ func (ann PortalAnnotation) GetPortalVariable(name string, filePath string) shar
 		DisplayName: displayName,
 		View:        view,
 		Group:       group,
+		lineNumber:  lineNumber,
 	}
 }
 
@@ -108,64 +103,13 @@ func tokenizeAnnotation(annotationStr string) (tokens []string) {
 
 // TODO: Handle bad = assignments
 func parseTokens(tokens []string) (ann PortalAnnotation, err error) {
-	isMock := false
-	boxRe := regexp.MustCompile(`^(\d+|full)x(\d+|full)$`)
-
 	var savedMocks map[string]any
 
 	for i := 0; i < len(tokens); i++ {
-		if isMock {
-			mockedValue := tokens[i]
-
-			if !unicode.IsDigit(rune(tokens[i][0])) && tokens[i][0] != '"' && tokens[i][0] != '{' {
-				if savedMocks == nil {
-					fileContent, err := os.ReadFile("mocks.json")
-					if err != nil {
-						return PortalAnnotation{}, fmt.Errorf("mocks.json does not exist, trying to find %s: %w", tokens[i], err)
-					}
-					if err = json.Unmarshal(fileContent, &savedMocks); err != nil {
-						return PortalAnnotation{}, err
-					}
-				}
-				jsonMock, ok := savedMocks[tokens[i]]
-				if !ok {
-					return PortalAnnotation{}, fmt.Errorf("could not find mock %s", tokens[i])
-				}
-
-				bytesValue, err := json.Marshal(jsonMock)
-				if err != nil {
-					return PortalAnnotation{}, err
-				}
-				mockedValue = string(bytesValue)
-			}
-			ann.Mocks = append(ann.Mocks, mockedValue)
-			continue
-		}
-
 		tokens[i] = strings.Trim(tokens[i], "\"")
 
 		if tokens[i] == "all" {
 			ann.All = true
-			continue
-		}
-		if tokens[i] == "ui" {
-			ann.UI = true
-			continue
-		}
-		if tokens[i] == "mock" {
-			isMock = true
-			continue
-		}
-
-		if boxRe.MatchString(tokens[i]) {
-			split := strings.Split(tokens[i], "x")
-
-			if split[0] != "full" {
-				ann.Box.Height, _ = strconv.Atoi(split[0])
-			}
-			if split[1] != "full" {
-				ann.Box.Width, _ = strconv.Atoi(split[1])
-			}
 			continue
 		}
 

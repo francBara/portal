@@ -14,6 +14,7 @@ type PortalVariable struct {
 	DisplayName string `json:"displayName"`
 	View        string `json:"view"`
 	Group       string `json:"group"`
+	LineNumber 	int    `json:"lineNumber"`
 }
 
 type IntVariable struct {
@@ -170,4 +171,8 @@ func (variables PortalVariables) Length() int {
 	}
 
 	return totalLength
+}
+
+func GetId(varName string, lineNumber int) {
+	return varName + ":" + lineNumber
 }

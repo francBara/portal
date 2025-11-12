@@ -24,29 +24,14 @@ func GetVariableType(value string) string {
 	return ""
 }
 
-func IsTailwindLine(line string) bool {
-	return strings.Contains(line, "-")
-}
-
-// Parses a tailwind line returning parameter name and numeric value
-func ParseTailwindLine(line string) (string, string) {
-	line = strings.TrimSpace(line)
-	valueIdx := strings.LastIndex(line, "-")
-
-	varName := line[:valueIdx]
-	value := regexp.MustCompile(`\D`).ReplaceAllString(line[valueIdx+1:], "")
-
-	return varName, value
-}
-
-func numberVariableFactory(name string, value string, filePath string, options annotation.PortalAnnotation) (shared.IntVariable, error) {
+func numberVariableFactory(name string, value string, filePath string, lineNumber int, options annotation.PortalAnnotation) (shared.IntVariable, error) {
 	parsedValue, err := strconv.Atoi(value)
 	if err != nil {
 		return shared.IntVariable{}, err
 	}
 
 	return shared.IntVariable{
-		PortalVariable: options.GetPortalVariable(name, filePath),
+		PortalVariable: options.GetPortalVariable(name, filePath, lineNumber),
 		Value:          parsedValue,
 		Max:            options.Max,
 		Min:            options.Min,
@@ -54,14 +39,14 @@ func numberVariableFactory(name string, value string, filePath string, options a
 	}, nil
 }
 
-func floatVariableFactory(name string, value string, filePath string, options annotation.PortalAnnotation) (shared.FloatVariable, error) {
+func floatVariableFactory(name string, value string, filePath string, lineNumber int, options annotation.PortalAnnotation) (shared.FloatVariable, error) {
 	parsedValue, err := strconv.ParseFloat(value, 32)
 	if err != nil {
 		return shared.FloatVariable{}, err
 	}
 
 	return shared.FloatVariable{
-		PortalVariable: options.GetPortalVariable(name, filePath),
+		PortalVariable: options.GetPortalVariable(name, filePath, lineNumber),
 		Value:          float32(parsedValue),
 		Max:            options.Max,
 		Min:            options.Min,
@@ -69,11 +54,11 @@ func floatVariableFactory(name string, value string, filePath string, options an
 	}, nil
 }
 
-func stringVariableFactory(name string, value string, filePath string, options annotation.PortalAnnotation) shared.StringVariable {
+func stringVariableFactory(name string, value string, filePath string, lineNumber int, options annotation.PortalAnnotation) shared.StringVariable {
 	value = strings.Trim(value, "\"'")
 
 	return shared.StringVariable{
-		PortalVariable: options.GetPortalVariable(name, filePath),
+		PortalVariable: options.GetPortalVariable(name, filePath, lineNumber),
 		Value:          value,
 	}
 }
