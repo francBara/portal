@@ -46,6 +46,7 @@ func PushChanges(configs utils.PatcherConfigs) func(w http.ResponseWriter, r *ht
 			updateBranch = payload.BranchName
 			err = github.CreateBranch(payload.BranchName)
 			if err != nil {
+				//TODO: If the error is "branch already exists", ignore error
 				http.Error(w, "Branch already exists", http.StatusBadRequest)
 				return
 			}

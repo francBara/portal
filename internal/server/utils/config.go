@@ -9,6 +9,11 @@ import (
 	"github.com/spf13/viper"
 )
 
+type Repo struct {
+	Owner string `json:"owner"`
+	Name  string `json:"name"`
+}
+
 type PatcherConfigs struct {
 	RepoOwner       string `json:"repoOwner"`
 	GithubUsername  string `json:"githubUsername"`
