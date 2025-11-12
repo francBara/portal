@@ -14,7 +14,7 @@ type PortalVariable struct {
 	DisplayName string `json:"displayName"`
 	View        string `json:"view"`
 	Group       string `json:"group"`
-	LineNumber 	int    `json:"lineNumber"`
+	LineNumber  int    `json:"lineNumber"`
 }
 
 type IntVariable struct {
@@ -45,17 +45,19 @@ type FileVariables struct {
 	String  map[string]StringVariable `json:"string"`
 }
 
-// PortalVariables retains all FileVariables by file name.
-type PortalVariables map[string]FileVariables
+// RepoVariables retains all FileVariables by file name.
+type RepoVariables map[string]FileVariables
 
-// Init allocates PortalVariables inner maps.
+type AllVariables map[string]RepoVariables
+
+// Init allocates RepoVariables inner maps.
 func (variables *FileVariables) Init() {
 	variables.Integer = make(map[string]IntVariable)
 	variables.Float = make(map[string]FloatVariable)
 	variables.String = make(map[string]StringVariable)
 }
 
-func (variables PortalVariables) DumpVariables() {
+func (variables RepoVariables) DumpVariables() {
 	file, err := os.Create("variables.json")
 	if err != nil {
 		panic(err)
@@ -69,8 +71,8 @@ func (variables PortalVariables) DumpVariables() {
 	}
 }
 
-// Collect returns FileVariables containing all variables across all files in PortalVariables.
-func (variables PortalVariables) Collect() FileVariables {
+// Collect returns FileVariables containing all variables across all files in RepoVariables.
+func (variables RepoVariables) Collect() FileVariables {
 	var mergedFileVars FileVariables
 
 	for _, fileVariables := range variables {
@@ -80,8 +82,8 @@ func (variables PortalVariables) Collect() FileVariables {
 	return mergedFileVars
 }
 
-// GetPatch returns a new PortalVariables instance, where values are updated with VariablesMap values
-func (variables PortalVariables) GetPatch(varsMap VariablesMap) (PortalVariables, error) {
+// GetPatch returns a new RepoVariables instance, where values are updated with VariablesMap values
+func (variables RepoVariables) GetPatch(varsMap VariablesMap) (RepoVariables, error) {
 	for _, groupVars := range varsMap {
 		for varName, variable := range groupVars {
 			fileVariables := variables[variable["filePath"].(string)]
@@ -89,7 +91,7 @@ func (variables PortalVariables) GetPatch(varsMap VariablesMap) (PortalVariables
 			if _, ok := fileVariables.Integer[varName]; ok {
 				value, ok := variable["value"].(int)
 				if !ok {
-					return PortalVariables{}, fmt.Errorf("variable %s is not int: %v %T", varName, variable["value"], variable["value"])
+					return RepoVariables{}, fmt.Errorf("variable %s is not int: %v %T", varName, variable["value"], variable["value"])
 				}
 
 				currVar := fileVariables.Integer[varName]
@@ -103,7 +105,7 @@ func (variables PortalVariables) GetPatch(varsMap VariablesMap) (PortalVariables
 			} else if _, ok := fileVariables.Float[varName]; ok {
 				value, ok := variable["value"].(float32)
 				if !ok {
-					return PortalVariables{}, errors.New("value is not float32")
+					return RepoVariables{}, errors.New("value is not float32")
 				}
 
 				currVar := fileVariables.Float[varName]
@@ -117,7 +119,7 @@ func (variables PortalVariables) GetPatch(varsMap VariablesMap) (PortalVariables
 			} else if _, ok := fileVariables.String[varName]; ok {
 				value, ok := variable["value"].(string)
 				if !ok {
-					return PortalVariables{}, errors.New("value is not string")
+					return RepoVariables{}, errors.New("value is not string")
 				}
 
 				currVar := fileVariables.String[varName]
@@ -131,6 +133,32 @@ func (variables PortalVariables) GetPatch(varsMap VariablesMap) (PortalVariables
 			}
 
 			variables[variable["filePath"].(string)] = fileVariables
+		}
+	}
+
+	return variables, nil
+}
+
+// GetPatch returns a new RepoVariables instance, where values are updated with VariablesMap values
+func (variables AllVariables) GetPatch(newVariables AllVariables) (AllVariables, error) {
+	for repoUrl, repoVars := range newVariables {
+		for fileName, fileVars := range repoVars {
+			//TODO: Replacing the whole variables with client variables, replace value only
+			for varName, intVar := range fileVars.Integer {
+				if variables[repoUrl][fileName].Integer[varName].Value != intVar.Value {
+					variables[repoUrl][fileName].Integer[varName] = intVar
+				}
+			}
+			for varName, strVar := range fileVars.String {
+				if variables[repoUrl][fileName].String[varName].Value != strVar.Value {
+					variables[repoUrl][fileName].String[varName] = strVar
+				}
+			}
+			for varName, floatVar := range fileVars.Float {
+				if variables[repoUrl][fileName].Float[varName].Value != floatVar.Value {
+					variables[repoUrl][fileName].Float[varName] = floatVar
+				}
+			}
 		}
 	}
 
@@ -162,8 +190,8 @@ func (fileVariables FileVariables) Length() int {
 	return len(fileVariables.Integer) + len(fileVariables.Float) + len(fileVariables.String)
 }
 
-// Length returns the total number of variables in PortalVariables.
-func (variables PortalVariables) Length() int {
+// Length returns the total number of variables in RepoVariables.
+func (variables RepoVariables) Length() int {
 	totalLength := 0
 
 	for _, fileVariables := range variables {
@@ -173,6 +201,6 @@ func (variables PortalVariables) Length() int {
 	return totalLength
 }
 
-func GetId(varName string, lineNumber int) {
-	return varName + ":" + lineNumber
+func GetId(varName string, lineNumber int) string {
+	return fmt.Sprintf("%s:%d", varName, lineNumber)
 }

@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"log/slog"
 	"os"
 	"path/filepath"
 	"portal/internal/parser/annotation"
@@ -18,10 +17,23 @@ type ParseOptions struct {
 
 var acceptedExtensions = [4]string{".js", ".ts", ".jsx", ".tsx"}
 
+func ParseAll(repos []string, options ParseOptions) (shared.AllVariables, error) {
+	allVars := make(shared.AllVariables)
+	var err error
+
+	for _, repo := range repos {
+		allVars[repo], err = ParseProject("repos/"+repo, options)
+		if err != nil {
+			return shared.AllVariables{}, err
+		}
+	}
+
+	return allVars, nil
+}
+
 // ParseProject crawls a directory and parses all files looking for @portal annotations.
-func ParseProject(rootPath string, options ParseOptions) (shared.PortalVariables, shared.PortalMocks, error) {
-	variables := make(shared.PortalVariables)
-	mocks := make(shared.PortalMocks)
+func ParseProject(rootPath string, options ParseOptions) (shared.RepoVariables, error) {
+	variables := make(shared.RepoVariables)
 
 	err := filepath.Walk(rootPath, func(path string, info os.FileInfo, err error) error {
 		//TODO: Improve rootPath and path parsing
@@ -49,7 +61,7 @@ func ParseProject(rootPath string, options ParseOptions) (shared.PortalVariables
 			}
 
 			// Parses the current file and merges it with the total variables
-			currentVariables, currentMocks, err := ParseFile(rootPath, relativePath, options)
+			currentVariables, err := ParseFile(rootPath, relativePath, options)
 			if err != nil {
 				return fmt.Errorf("parse file %s: %w", relativePath, err)
 			}
@@ -57,18 +69,15 @@ func ParseProject(rootPath string, options ParseOptions) (shared.PortalVariables
 			if currentVariables.Length() > 0 {
 				variables[relativePath] = currentVariables
 			}
-			if len(currentMocks) > 0 {
-				mocks[relativePath] = currentMocks
-			}
 		}
 
 		return nil
 	})
 
 	if err != nil {
-		return shared.PortalVariables{}, shared.PortalMocks{}, err
+		return shared.RepoVariables{}, err
 	}
-	return variables, mocks, nil
+	return variables, nil
 }
 
 // ParseFile takes in a file path and outputs the FileVariables relative to all the file @portal annotations.
@@ -127,7 +136,7 @@ func ParseFile(basePath string, filePath string, options ParseOptions) (shared.F
 		}
 
 		if hasAnnotation || scanAll {
-			// Variable declaration match. Name, type and value are parsed and added to file PortalVariables
+			// Variable declaration match. Name, type and value are parsed and added to file RepoVariables
 			if varMatches := shared.VariableRegex.FindStringSubmatch(line); varMatches != nil {
 				if options.Verbose {
 					fmt.Printf("Variable: %s\n", line)

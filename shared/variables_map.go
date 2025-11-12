@@ -18,8 +18,8 @@ func (varsMap *VariablesMap) add(variable PortalVariable, filePath string, value
 
 }
 
-// ToMap converts PortalVariables struct to a hash map containing variables as final values and keys hierarchy: file -> group -> variable name.
-func (variables PortalVariables) ToMap() VariablesMap {
+// ToMap converts RepoVariables struct to a hash map containing variables as final values and keys hierarchy: file -> group -> variable name.
+func (variables RepoVariables) ToMap() VariablesMap {
 	mappedVariables := make(VariablesMap)
 
 	for filePath, fileVars := range variables {

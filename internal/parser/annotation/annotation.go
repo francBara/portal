@@ -1,12 +1,9 @@
 package annotation
 
 import (
-	"encoding/json"
 	"fmt"
-	"os"
 	"path/filepath"
 	"portal/shared"
-	"regexp"
 	"strconv"
 	"strings"
 	"unicode"
@@ -44,7 +41,7 @@ func (ann PortalAnnotation) GetPortalVariable(name string, filePath string, line
 		DisplayName: displayName,
 		View:        view,
 		Group:       group,
-		lineNumber:  lineNumber,
+		LineNumber:  lineNumber,
 	}
 }
 
@@ -103,8 +100,6 @@ func tokenizeAnnotation(annotationStr string) (tokens []string) {
 
 // TODO: Handle bad = assignments
 func parseTokens(tokens []string) (ann PortalAnnotation, err error) {
-	var savedMocks map[string]any
-
 	for i := 0; i < len(tokens); i++ {
 		tokens[i] = strings.Trim(tokens[i], "\"")
 
@@ -147,8 +142,5 @@ func ParseAnnotation(annotationStr string) (ann PortalAnnotation, err error) {
 		return PortalAnnotation{}, err
 	}
 
-	if ann.All && len(ann.Mocks) > 0 {
-		return PortalAnnotation{}, fmt.Errorf("annotation error: cannot have both all and mocks defined")
-	}
 	return ann, nil
 }

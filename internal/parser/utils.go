@@ -3,7 +3,6 @@ package parser
 import (
 	"portal/internal/parser/annotation"
 	"portal/shared"
-	"regexp"
 	"strconv"
 	"strings"
 )

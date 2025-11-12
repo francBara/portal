@@ -3,6 +3,7 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"log/slog"
 
 	"github.com/joho/godotenv"
@@ -10,18 +11,19 @@ import (
 )
 
 type Repo struct {
-	Owner string `json:"owner"`
-	Name  string `json:"name"`
+	Owner  string `json:"owner"`
+	Name   string `json:"name"`
+	Branch string `json:"branch"`
 }
 
 type PatcherConfigs struct {
-	RepoOwner       string `json:"repoOwner"`
-	GithubUsername  string `json:"githubUsername"`
-	RepoName        string `json:"repoName"`
-	RepoBranch      string `json:"repoBranch"`
-	Pac             string `json:"pac"`
-	OpenPullRequest bool   `json:"openPullRequest"`
-	ServePreview    bool   `json:"servePreview"`
+	ReposNames      []string `json:"reposNames"`
+	ReposOwners     []string `json:"reposOwners"`
+	ReposBranches   []string `json:"reposBranches"`
+	GithubUsername  string   `json:"githubUsername"`
+	Pac             string   `json:"pac"`
+	OpenPullRequest bool     `json:"openPullRequest"`
+	ServePreview    bool     `json:"servePreview"`
 }
 
 func (config PatcherConfigs) Print() {
@@ -59,10 +61,10 @@ func LoadConfigs() PatcherConfigs {
 
 	var config PatcherConfigs
 
-	viper.BindEnv("repoOwner", "REPO_OWNER")
 	viper.BindEnv("githubUsername", "GITHUB_USERNAME")
-	viper.BindEnv("repoName", "REPO_NAME")
-	viper.BindEnv("repoBranch", "REPO_BRANCH")
+	viper.BindEnv("reposNames", "REPOS_NAMES")
+	viper.BindEnv("reposOwners", "REPOS_OWNERS")
+	viper.BindEnv("reposBranches", "REPOS_BRANCHES")
 	viper.BindEnv("pac", "PAC")
 	viper.BindEnv("openPullRequest", "OPEN_PULL_REQUEST")
 	viper.BindEnv("servePreview", "SERVE_PREVIEW")
@@ -83,8 +85,8 @@ func LoadConfigs() PatcherConfigs {
 		panic(err)
 	}
 
-	if config.RepoOwner == "" {
-		config.RepoOwner = config.GithubUsername
+	if config.Pac == "" {
+		log.Fatal("PAC not provided")
 	}
 
 	return config

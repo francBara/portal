@@ -3,13 +3,13 @@ package server
 import (
 	"fmt"
 	"log"
-	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
 	"portal/internal/server/auth"
 	"portal/internal/server/controllers"
 	"portal/internal/server/github"
+	"portal/internal/server/globals"
 	"portal/internal/server/utils"
 	"strconv"
 
@@ -22,12 +22,12 @@ func RunServer(port int) {
 
 	configs.Print()
 
-	err := github.Init(configs.RepoName, configs.RepoOwner, configs.GithubUsername, configs.RepoBranch, configs.Pac)
+	err := github.Init(configs)
 	if err != nil {
-		slog.Error("Error initializing github client", "error", err.Error())
+		log.Fatal("Error initializing github client", " ", err.Error())
 	}
 
-	utils.LoadVariables()
+	globals.LoadVariables()
 
 	r := chi.NewRouter()
 

@@ -18,17 +18,19 @@ let asd = "asdf";
 
 	newVariables := shared.FileVariables{
 		Integer: map[string]shared.IntVariable{
-			"b": {
+			"b:4": {
 				PortalVariable: shared.PortalVariable{
-					Name: "b",
+					Name:       "b",
+					LineNumber: 4,
 				},
 				Value: 100,
 			},
 		},
 		String: map[string]shared.StringVariable{
-			"asd": {
+			"asd:7": {
 				PortalVariable: shared.PortalVariable{
-					Name: "asd",
+					Name:       "asd",
+					LineNumber: 7,
 				},
 				Value: "qwerty",
 			},

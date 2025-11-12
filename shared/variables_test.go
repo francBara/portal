@@ -7,7 +7,7 @@ import (
 )
 
 func TestVariablesMap(t *testing.T) {
-	variables := PortalVariables{
+	variables := RepoVariables{
 		"index.js": FileVariables{
 			Integer: map[string]IntVariable{
 				"numero": {

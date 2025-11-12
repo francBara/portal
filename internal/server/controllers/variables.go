@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
-	"portal/internal/server/utils"
+	"portal/internal/server/globals"
 )
 
 // GetVariables returns the current variables in the server state.
 func GetVariables() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		variables, err := utils.LoadVariables()
+		variables, err := globals.LoadVariables()
 		if err != nil {
 			slog.Error("GET api/variables", "error", err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -18,6 +18,6 @@ func GetVariables() func(w http.ResponseWriter, r *http.Request) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(variables.ToMap())
+		json.NewEncoder(w).Encode(variables)
 	}
 }

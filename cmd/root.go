@@ -1,9 +1,6 @@
 package main
 
 import (
-	"log"
-
-	"portal/internal/parser"
 	"portal/internal/server"
 
 	"github.com/spf13/cobra"
@@ -18,11 +15,11 @@ func init() {
 		Short: "Parse the given project",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			variables, _, err := parser.ParseProject(args[0], parser.ParseOptions{})
-			if err != nil {
-				log.Fatalln("Error parsing project: " + err.Error())
-			}
-			variables.DumpVariables()
+			// variables, err := parser.ParseProject(args[0], parser.ParseOptions{})
+			// if err != nil {
+			// 	log.Fatalln("Error parsing project: " + err.Error())
+			// }
+			// variables.DumpVariables()
 		},
 	}
 
