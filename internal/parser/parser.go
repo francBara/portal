@@ -2,6 +2,7 @@ package parser
 
 import (
 	"bufio"
+	"crypto/sha256"
 	"fmt"
 	"io"
 	"os"
@@ -107,7 +108,7 @@ func ParseFile(basePath string, filePath string, options ParseOptions) (shared.F
 
 	file.Seek(0, io.SeekStart)
 
-	language, err := GetLanguageRegex(filePath)
+	language, err := shared.GetLanguageRegex(filePath)
 	if err != nil {
 		return shared.FileVariables{}, err
 	}
@@ -179,7 +180,7 @@ func ParseFile(basePath string, filePath string, options ParseOptions) (shared.F
 		}
 	}
 
-	variables.sha = fmt.Sprintf("%x", hasher.Sum(nil))
+	variables.Hash = fmt.Sprintf("%x", hasher.Sum(nil))
 
 	return variables, nil
 }

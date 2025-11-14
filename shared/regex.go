@@ -1,19 +1,25 @@
 package shared
 
-import "regexp"
+import (
+	"fmt"
+	"regexp"
+	"strings"
+)
 
 var AnnotationRegex = regexp.MustCompile(`//\s*@portal\s*(.*)`)
 var AnnotationArgsRegex = regexp.MustCompile(`(\w+)\s*=\s*(".*?"|\S+)`)
 
 func GetLanguageRegex(filePath string) (LanguageRegex, error) {
-	fileExtension := Strings.trim(filePath, ".")[-1]
+	splitFilePath := strings.Split(filePath, ".")
+	fileExtension := splitFilePath[len(splitFilePath)-1]
 
 	switch fileExtension {
 	//TODO: Or js, jsx, tsx...
+
 	case "ts":
 		return languageRegexes["typescript"], nil
 	default:
-		return t.Errorf("language for file extension %s not found", fileExtension)
+		return LanguageRegex{}, fmt.Errorf("language for file extension %s not found", fileExtension)
 	}
 }
 

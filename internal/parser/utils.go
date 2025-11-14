@@ -61,3 +61,7 @@ func stringVariableFactory(name string, value string, filePath string, lineNumbe
 		Value:          value,
 	}
 }
+
+func getFileHash(fileContent string) string {
+	return fileContent
+}

@@ -37,7 +37,9 @@ let asd = "asdf";
 		},
 	}
 
-	patched, err := PatchFile(content, newVariables)
+	language, _ := shared.GetLanguageRegex("ts")
+
+	patched, err := PatchFile(content, newVariables, language)
 	if err != nil {
 		t.Error("Error patching file", err.Error())
 	}

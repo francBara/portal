@@ -6,6 +6,7 @@ import (
 	"portal/internal/patcher"
 	"portal/internal/server/auth"
 	"portal/internal/server/github"
+	"portal/internal/server/globals"
 	"portal/internal/server/utils"
 	"portal/shared"
 )
@@ -31,7 +32,11 @@ func PushChanges(configs utils.PatcherConfigs) func(w http.ResponseWriter, r *ht
 		var updateBranch string
 
 		user := r.Context().Value("user").(*auth.PortalUser)
-		variables := globals.LoadVariables()
+		variables, err := globals.LoadVariables()
+		if err != nil {
+			http.Error(w, "Error loading server variables", http.StatusInternalServerError)
+			return
+		}
 
 		//TODO: verify that payload.Update is coherent with variables
 		for repoUrl, repoVars := range payload.Update {
@@ -52,12 +57,18 @@ func PushChanges(configs utils.PatcherConfigs) func(w http.ResponseWriter, r *ht
 
 				fileContent, fileSha := repo.GetRepoFile(github.Client, filePath)
 
-				if variables[repoUrl][filePath].sha != fileSha {
+				if variables[repoUrl][filePath].Hash != fileSha {
 					http.Error(w, "File has been modified since last pull", http.StatusBadRequest)
 					return
 				}
 
-				newContent, err := patcher.PatchFile(fileContent, fileVars)
+				language, err := shared.GetLanguageRegex(filePath)
+				if err != nil {
+					http.Error(w, "File has unsupported language", http.StatusBadRequest)
+					return
+				}
+
+				newContent, err := patcher.PatchFile(fileContent, fileVars, language)
 				if err != nil {
 					http.Error(w, "Could not patch file", http.StatusInternalServerError)
 				}
