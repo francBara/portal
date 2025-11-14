@@ -15,7 +15,7 @@ func getIndentation(line string) string {
 }
 
 // PatchFile returns a modified copy of content, where its annotated variables are updated with newVariables values.
-func PatchFile(content string, newVariables shared.FileVariables) (patchedContent string, err error) {
+func PatchFile(content string, newVariables shared.FileVariables, language LanguageRegex) (patchedContent string, err error) {
 	scanner := bufio.NewScanner(strings.NewReader(content))
 
 	var newContent []string
@@ -33,7 +33,7 @@ func PatchFile(content string, newVariables shared.FileVariables) (patchedConten
 			lineCounter++
 
 			//TODO: Does this nested variable lookup account for @portal all annotations?
-			if matches := shared.VariableRegex.FindStringSubmatch(line); matches != nil {
+			if matches := language.Variable.FindStringSubmatch(line); matches != nil {
 				indentation := getIndentation(line)
 				declarationType := matches[1]
 				varName := matches[2]
@@ -56,6 +56,7 @@ func PatchFile(content string, newVariables shared.FileVariables) (patchedConten
 
 					newLine := fmt.Sprintf("%s%s %s = %d;", indentation, declarationType, varName, newVar.Value)
 
+					//TODO: Move append newLine at the end of the loop, once for every if condition
 					newContent = append(newContent, newLine)
 				} else if varType == "float" {
 					newVar, ok := newVariables.Float[varId]

@@ -31,7 +31,9 @@ func PushChanges(configs utils.PatcherConfigs) func(w http.ResponseWriter, r *ht
 		var updateBranch string
 
 		user := r.Context().Value("user").(*auth.PortalUser)
+		variables := globals.LoadVariables()
 
+		//TODO: verify that payload.Update is coherent with variables
 		for repoUrl, repoVars := range payload.Update {
 			for filePath, fileVars := range repoVars {
 				repo := github.GetRepo(repoUrl)
@@ -49,6 +51,11 @@ func PushChanges(configs utils.PatcherConfigs) func(w http.ResponseWriter, r *ht
 				}
 
 				fileContent, fileSha := repo.GetRepoFile(github.Client, filePath)
+
+				if variables[repoUrl][filePath].sha != fileSha {
+					http.Error(w, "File has been modified since last pull", http.StatusBadRequest)
+					return
+				}
 
 				newContent, err := patcher.PatchFile(fileContent, fileVars)
 				if err != nil {

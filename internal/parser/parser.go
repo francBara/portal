@@ -45,6 +45,7 @@ func ParseProject(rootPath string, options ParseOptions) (shared.RepoVariables, 
 		}
 
 		if !info.IsDir() {
+			//TODO: Replace with map lookup and select regex here
 			isValidExtension := false
 			for _, extension := range acceptedExtensions {
 				if strings.HasSuffix(info.Name(), extension) {
@@ -104,6 +105,11 @@ func ParseFile(basePath string, filePath string, options ParseOptions) (shared.F
 	scanner := bufio.NewScanner(file)
 
 	file.Seek(0, io.SeekStart)
+
+	language, err := GetLanguageRegex(filePath)
+	if err != nil {
+		return shared.FileVariables{}, err
+	}
 
 	for scanner.Scan() {
 		line := scanner.Text()
