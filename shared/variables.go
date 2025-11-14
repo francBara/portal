@@ -43,6 +43,7 @@ type FileVariables struct {
 	Integer map[string]IntVariable    `json:"integer"`
 	Float   map[string]FloatVariable  `json:"float"`
 	String  map[string]StringVariable `json:"string"`
+	String  sha                       `json:"sha"`
 }
 
 // RepoVariables retains all FileVariables by file name.

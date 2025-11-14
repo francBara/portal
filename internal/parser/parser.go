@@ -104,6 +104,9 @@ func ParseFile(basePath string, filePath string, options ParseOptions) (shared.F
 
 	scanner := bufio.NewScanner(file)
 
+	//TODO: Calculate file hash
+	variables.sha = 
+
 	file.Seek(0, io.SeekStart)
 
 	language, err := GetLanguageRegex(filePath)
@@ -143,7 +146,7 @@ func ParseFile(basePath string, filePath string, options ParseOptions) (shared.F
 
 		if hasAnnotation || scanAll {
 			// Variable declaration match. Name, type and value are parsed and added to file RepoVariables
-			if varMatches := shared.VariableRegex.FindStringSubmatch(line); varMatches != nil {
+			if varMatches := language.Variable.FindStringSubmatch(line); varMatches != nil {
 				if options.Verbose {
 					fmt.Printf("Variable: %s\n", line)
 				}
