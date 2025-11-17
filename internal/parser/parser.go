@@ -103,9 +103,7 @@ func ParseFile(basePath string, filePath string, options ParseOptions) (shared.F
 	lineCounter := 0
 
 	scanner := bufio.NewScanner(file)
-
-	//TODO: Calculate file hash
-	variables.sha = 
+	hasher := sha256.New()
 
 	file.Seek(0, io.SeekStart)
 
@@ -116,6 +114,9 @@ func ParseFile(basePath string, filePath string, options ParseOptions) (shared.F
 
 	for scanner.Scan() {
 		line := scanner.Text()
+
+		hasher.Write([]byte(line + "\n"))
+
 		lineCounter++
 
 		// Annotation match
@@ -177,6 +178,8 @@ func ParseFile(basePath string, filePath string, options ParseOptions) (shared.F
 			hasAnnotation = false
 		}
 	}
+
+	variables.sha = fmt.Sprintf("%x", hasher.Sum(nil))
 
 	return variables, nil
 }
