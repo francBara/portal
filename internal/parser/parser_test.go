@@ -79,6 +79,7 @@ func TestJavascript(t *testing.T) {
 				Value: "eccoci",
 			},
 		},
+		Hash: "a4ddbff679183373f47d54ae8285171b65d175cef7ea301fb3c670fbe72baabe",
 	}
 
 	if diff := cmp.Diff(expected, variables); diff != "" {

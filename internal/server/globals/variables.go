@@ -22,11 +22,12 @@ func LoadVariables() (shared.AllVariables, error) {
 		repoUrls = append(repoUrls, repo.GetUrl())
 	}
 
-	vars, err := parser.ParseAll(repoUrls, parser.ParseOptions{})
+	vars, err := parser.ParseAll(repoUrls, parser.ParseOptions{Verbose: true})
 	if err != nil {
 		return shared.AllVariables{}, err
 	}
 	slog.Info("Parsed repos", "repos", len(github.GithubClient.Repos))
+	slog.Info("Total variables", "variables", vars.Length())
 
 	variables = &vars
 

@@ -16,7 +16,7 @@ func GetLanguageRegex(filePath string) (LanguageRegex, error) {
 	switch fileExtension {
 	//TODO: Or js, jsx, tsx...
 
-	case "ts":
+	case "ts", "js", "tsx", "jsx":
 		return languageRegexes["typescript"], nil
 	default:
 		return LanguageRegex{}, fmt.Errorf("language for file extension %s not found", fileExtension)
@@ -30,7 +30,7 @@ type LanguageRegex struct {
 
 var languageRegexes = map[string]LanguageRegex{
 	"typescript": {
-		Variable: regexp.MustCompile(`(let|const|var)\s+(\w+)\s*:\s*(\w+)\s*=\s*(.+)`),
+		Variable: regexp.MustCompile(`(let|const|var)\s+(\w+)\s*=\s*(.+)`),
 		MapEntry: regexp.MustCompile(`\s*(\w+)\s*:\s*(.+)`),
 	},
 }

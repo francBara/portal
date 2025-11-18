@@ -29,9 +29,9 @@ func (repo Repo) GetWebUrl() string {
 }
 
 func (repo Repo) clone(stub GithubStub) error {
-	url := repo.GetWebUrl()
+	//TODO: Handle already cloned repo case
 
-	slog.Info("Cloning", "repo", url, "user", stub.UserName)
+	slog.Info("Cloning", "repo", repo.GetUrl(), "user", stub.UserName)
 
 	cred := fmt.Sprintf("https://%s:%s@github.com\n", stub.UserName, stub.Pac)
 	err := os.WriteFile(os.Getenv("HOME")+"/.git-credentials", []byte(cred), 0600)
@@ -45,7 +45,7 @@ func (repo Repo) clone(stub GithubStub) error {
 		return err
 	}
 
-	cmd = exec.Command("git", "clone", "--recurse-submodules", "--branch", repo.Branch, "--single-branch", url, fmt.Sprintf("%s/%s", "repos", repo.GetUrl()))
+	cmd = exec.Command("git", "clone", "--recurse-submodules", "--branch", repo.Branch, "--single-branch", repo.GetWebUrl(), fmt.Sprintf("%s/%s", "repos", repo.GetUrl()))
 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

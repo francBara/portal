@@ -202,6 +202,16 @@ func (variables RepoVariables) Length() int {
 	return totalLength
 }
 
+func (variables AllVariables) Length() int {
+	totalLength := 0
+
+	for _, repoVariables := range variables {
+		totalLength += repoVariables.Length()
+	}
+
+	return totalLength
+}
+
 func GetId(varName string, lineNumber int) string {
 	return fmt.Sprintf("%s:%d", varName, lineNumber)
 }
