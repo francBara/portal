@@ -53,6 +53,9 @@ func RunServer(port int) {
 
 			// Applies the update to the remote repo
 			secureApi.Post("/patch", controllers.PushChanges(configs))
+
+			// Reclones remote repos
+			secureApi.Post("/sync", controllers.SyncRemote())
 		})
 	})
 

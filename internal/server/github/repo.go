@@ -28,9 +28,7 @@ func (repo Repo) GetWebUrl() string {
 
 }
 
-func (repo Repo) clone(stub GithubStub) error {
-	//TODO: Handle already cloned repo case
-
+func (repo Repo) Clone(stub GithubStub) error {
 	slog.Info("Cloning", "repo", repo.GetUrl(), "user", stub.UserName)
 
 	cred := fmt.Sprintf("https://%s:%s@github.com\n", stub.UserName, stub.Pac)
@@ -75,7 +73,6 @@ func (repo Repo) CreateBranch(client *github.Client) (string newBranchName, erro
 		},
 	}
 
-	//TODO: Handle branch already exists error
 	_, _, err = client.Git.CreateRef(ctx, repo.Owner, repo.Name, newRef)
 	if err != nil {
 		return "", err
