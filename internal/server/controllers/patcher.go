@@ -13,7 +13,6 @@ import (
 
 type PatcherPayload struct {
 	Update        shared.AllVariables `json:"update"`
-	BranchName    string              `json:"branchName"`
 	CommitMessage string              `json:"commitMessage"`
 }
 
@@ -29,8 +28,6 @@ func PushChanges(configs utils.PatcherConfigs) func(w http.ResponseWriter, r *ht
 			return
 		}
 
-		var updateBranch string
-
 		user := r.Context().Value("user").(*auth.PortalUser)
 		variables, err := globals.LoadVariables()
 		if err != nil {
@@ -40,21 +37,20 @@ func PushChanges(configs utils.PatcherConfigs) func(w http.ResponseWriter, r *ht
 
 		//TODO: verify that payload.Update is coherent with variables
 		for repoUrl, repoVars := range payload.Update {
-			for filePath, fileVars := range repoVars {
-				repo := github.GetRepo(repoUrl)
+			repo := github.GetRepo(repoUrl)
+			var updateBranch string
 
-				if configs.OpenPullRequest {
-					updateBranch = payload.BranchName
-					err = repo.CreateBranch(github.Client)
-					if err != nil {
-						//TODO: If the error is "branch already exists", ignore error
-						http.Error(w, "Branch already exists", http.StatusBadRequest)
-						return
-					}
-				} else {
-					updateBranch = repo.Branch
+			if configs.OpenPullRequest {
+				updateBranch, err = repo.CreateBranch(github.Client)
+				if err != nil {
+					http.Error(w, "Error creating new branch", http.StatusBadRequest)
+					return
 				}
+			} else {
+				updateBranch = repo.Branch
+			}
 
+			for filePath, fileVars := range repoVars {
 				fileContent, fileSha := repo.GetRepoFile(github.Client, filePath)
 
 				if variables[repoUrl][filePath].Hash != fileSha {
@@ -74,10 +70,10 @@ func PushChanges(configs utils.PatcherConfigs) func(w http.ResponseWriter, r *ht
 				}
 
 				repo.UpdateFile(github.Client, newContent, filePath, fileSha, updateBranch, payload.CommitMessage, *user)
+			}
 
-				if configs.OpenPullRequest {
-					repo.CreatePullRequest(github.Client, payload.BranchName, "Portal", payload.CommitMessage)
-				}
+			if configs.OpenPullRequest {
+				repo.CreatePullRequest(github.Client, updateBranch, "Portal", payload.CommitMessage)
 			}
 		}
 	}

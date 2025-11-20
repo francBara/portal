@@ -58,7 +58,7 @@ func (repo Repo) clone(stub GithubStub) error {
 	return nil
 }
 
-func (repo Repo) CreateBranch(client *github.Client) error {
+func (repo Repo) CreateBranch(client *github.Client) (string newBranchName, error err) {
 	ctx := context.Background()
 
 	baseRef, _, err := client.Git.GetRef(ctx, repo.Owner, repo.Name, "refs/heads/"+repo.Branch)
@@ -66,8 +66,10 @@ func (repo Repo) CreateBranch(client *github.Client) error {
 		log.Fatalf("Error getting base branch: %v", err)
 	}
 
+	newBranchName := getNewBranchName()
+
 	newRef := &github.Reference{
-		Ref: github.Ptr("refs/heads/portal/request"),
+		Ref: github.Ptr(fmt.Sprintf("refs/heads/%s", newBranchName)),
 		Object: &github.GitObject{
 			SHA: baseRef.Object.SHA,
 		},
@@ -76,10 +78,10 @@ func (repo Repo) CreateBranch(client *github.Client) error {
 	//TODO: Handle branch already exists error
 	_, _, err = client.Git.CreateRef(ctx, repo.Owner, repo.Name, newRef)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	return newBranchName, nil
 }
 
 func (repo Repo) GetRepoFile(client *github.Client, filePath string) (string, string) {
@@ -136,4 +138,15 @@ func (repo Repo) CreatePullRequest(client *github.Client, fromBranch string, tit
 	if err != nil {
 		log.Fatalf("Error creating PR: %v", err)
 	}
+}
+
+func getNewBranchName() string {
+	const charset = "abcdefghijklmnopqrstuvwxyz0123456789"
+    
+    randomChars := make([]byte, 6)
+    for i := range randomChars {
+        randomChars[i] = charset[rand.Intn(len(charset))]
+    }
+
+	return fmt.Sprintf("portal/%s", randomChars)
 }
