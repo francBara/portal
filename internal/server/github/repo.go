@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"log"
 	"log/slog"
+	"math/rand"
 	"os"
 	"os/exec"
+	"path"
 	"portal/internal/server/auth"
 	"time"
 
@@ -43,6 +45,8 @@ func (repo Repo) Clone(stub GithubStub) error {
 		return err
 	}
 
+	os.RemoveAll(path.Join("repos", repo.GetUrl()))
+
 	cmd = exec.Command("git", "clone", "--recurse-submodules", "--branch", repo.Branch, "--single-branch", repo.GetWebUrl(), fmt.Sprintf("%s/%s", "repos", repo.GetUrl()))
 
 	cmd.Stdout = os.Stdout
@@ -56,7 +60,7 @@ func (repo Repo) Clone(stub GithubStub) error {
 	return nil
 }
 
-func (repo Repo) CreateBranch(client *github.Client) (string newBranchName, error err) {
+func (repo Repo) CreateBranch(client *github.Client) (newBranchName string, err error) {
 	ctx := context.Background()
 
 	baseRef, _, err := client.Git.GetRef(ctx, repo.Owner, repo.Name, "refs/heads/"+repo.Branch)
@@ -64,7 +68,7 @@ func (repo Repo) CreateBranch(client *github.Client) (string newBranchName, erro
 		log.Fatalf("Error getting base branch: %v", err)
 	}
 
-	newBranchName := getNewBranchName()
+	newBranchName = getNewBranchName()
 
 	newRef := &github.Reference{
 		Ref: github.Ptr(fmt.Sprintf("refs/heads/%s", newBranchName)),
@@ -139,11 +143,11 @@ func (repo Repo) CreatePullRequest(client *github.Client, fromBranch string, tit
 
 func getNewBranchName() string {
 	const charset = "abcdefghijklmnopqrstuvwxyz0123456789"
-    
-    randomChars := make([]byte, 6)
-    for i := range randomChars {
-        randomChars[i] = charset[rand.Intn(len(charset))]
-    }
+
+	randomChars := make([]byte, 6)
+	for i := range randomChars {
+		randomChars[i] = charset[rand.Intn(len(charset))]
+	}
 
 	return fmt.Sprintf("portal/%s", randomChars)
 }

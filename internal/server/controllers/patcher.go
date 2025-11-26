@@ -54,7 +54,7 @@ func PushChanges(configs utils.PatcherConfigs) func(w http.ResponseWriter, r *ht
 				fileContent, fileSha := repo.GetRepoFile(github.Client, filePath)
 
 				if variables[repoUrl][filePath].Hash != fileSha {
-					go repo.Clone()
+					go repo.Clone(*github)
 					//TODO: Return proper status code so that the client knows that the repo has been modified
 					http.Error(w, "File has been modified since last pull", http.StatusBadRequest)
 					return

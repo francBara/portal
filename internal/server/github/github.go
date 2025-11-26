@@ -45,7 +45,7 @@ func Init(configs utils.PatcherConfigs) error {
 	stub.Client = github.NewClient(tc)
 
 	for _, repo := range stub.Repos {
-		err := repo.clone(stub)
+		err := repo.Clone(stub)
 		if err != nil {
 			return err
 		}
