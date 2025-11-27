@@ -104,6 +104,7 @@ func (repo Repo) GetRepoFile(client *github.Client, filePath string) (string, st
 	return decodedContent, fileContent.GetSHA()
 }
 
+// TOOD: Should return an error, not throwing fatal
 func (repo Repo) UpdateFile(client *github.Client, newContent string, filePath string, oldFileSha string, branch string, commitMessage string, fromUser auth.PortalUser) {
 	ctx := context.Background()
 

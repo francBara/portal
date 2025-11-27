@@ -2,6 +2,8 @@ package controllers
 
 import (
 	"encoding/json"
+	"fmt"
+	"log/slog"
 	"net/http"
 	"portal/internal/patcher"
 	"portal/internal/server/auth"
@@ -28,7 +30,6 @@ func PushChanges(configs utils.PatcherConfigs) func(w http.ResponseWriter, r *ht
 			return
 		}
 
-		user := r.Context().Value("user").(*auth.PortalUser)
 		variables, err := globals.LoadVariables()
 		if err != nil {
 			http.Error(w, "Error loading server variables", http.StatusInternalServerError)
@@ -53,7 +54,9 @@ func PushChanges(configs utils.PatcherConfigs) func(w http.ResponseWriter, r *ht
 			for filePath, fileVars := range repoVars {
 				fileContent, fileSha := repo.GetRepoFile(github.Client, filePath)
 
-				if variables[repoUrl][filePath].Hash != fileSha {
+				if variables[repoUrl][filePath].Hash != fileSha && false {
+					//TODO: Implement better, it does not work
+					slog.Info(fmt.Sprintf("%s/%s: file hash %s is different from repo %s", repoUrl, filePath, variables[repoUrl][filePath].Hash, fileSha))
 					go repo.Clone(*github)
 					//TODO: Return proper status code so that the client knows that the repo has been modified
 					http.Error(w, "File has been modified since last pull", http.StatusBadRequest)
@@ -69,9 +72,15 @@ func PushChanges(configs utils.PatcherConfigs) func(w http.ResponseWriter, r *ht
 				newContent, err := patcher.PatchFile(fileContent, fileVars, language)
 				if err != nil {
 					http.Error(w, "Could not patch file", http.StatusInternalServerError)
+					return
 				}
 
-				repo.UpdateFile(github.Client, newContent, filePath, fileSha, updateBranch, payload.CommitMessage, *user)
+				slog.Info(fmt.Sprintf("Updating file %s in repo %s", filePath, repoUrl))
+				repo.UpdateFile(github.Client, newContent, filePath, fileSha, updateBranch, payload.CommitMessage, auth.PortalUser{
+					Name:         "Portal user",
+					Email:        "francesco.barabino@tiscali.it",
+					PasswordHash: "xxx",
+				})
 			}
 
 			if configs.OpenPullRequest {
